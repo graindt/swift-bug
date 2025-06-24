@@ -248,7 +248,7 @@ class BugLinkDetector {
   }
 
   scanExistingLinks() {
-    const links = document.querySelectorAll('a[href*=".json"]');
+    const links = document.querySelectorAll('a');
     links.forEach(link => this.processLink(link));
   }
 
@@ -258,11 +258,11 @@ class BugLinkDetector {
         mutation.addedNodes.forEach((node) => {
           if (node.nodeType === Node.ELEMENT_NODE) {
             // Check if the node itself is a link
-            if (node.tagName === 'A' && node.href && node.href.includes('.json')) {
+            if (node.tagName === 'A') {
               this.processLink(node);
             }
             // Check for links within the added node
-            const links = node.querySelectorAll ? node.querySelectorAll('a[href*=".json"]') : [];
+            const links = node.querySelectorAll ? node.querySelectorAll('a') : [];
             links.forEach(link => this.processLink(link));
           }
         });
