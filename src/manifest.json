@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Chrome Bug Reporter",
+  "name": "Swift Bug",
   "version": "1.0.0",
   "description": "A Chrome extension for saving and reproducing web application bugs",
   "permissions": [

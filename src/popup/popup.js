@@ -57,7 +57,8 @@ class BugReporterPopup {
     if (this.currentTab && this.currentTab.url) {
       try {
         const url = new URL(this.currentTab.url);
-        urlElement.textContent = url.hostname + url.pathname;
+        // Include hash in the displayed URL
+        urlElement.textContent = url.hostname + url.pathname + url.hash;
         urlElement.title = this.currentTab.url;
       } catch (error) {
         urlElement.textContent = this.currentTab.url;
@@ -481,6 +482,16 @@ class BugReporterPopup {
       if (response.success) {
         this.showSuccess('Bug报告已删除');
         await this.loadBugReports(); // Reload reports
+        // If no reports left, clear the reports container and show empty state
+        if (this.reports.length === 0) {
+          const container = document.getElementById('reportsContainer');
+          const emptyState = document.getElementById('emptyState');
+          // Remove all report items
+          const existingReports = container.querySelectorAll('.bug-report-item');
+          existingReports.forEach(item => item.remove());
+          // Show empty state
+          emptyState.style.display = 'block';
+        }
       } else {
         throw new Error(response.error);
       }
