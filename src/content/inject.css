@@ -1,0 +1,36 @@
+.bug-fab-save-btn {
+  position: fixed;
+  right: 24px;
+  bottom: 32px;
+  z-index: 2147483647;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.15);
+  padding: 12px 22px 12px 18px;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: box-shadow 0.2s, background 0.2s;
+  outline: none;
+}
+.bug-fab-save-btn:hover {
+  box-shadow: 0 6px 24px rgba(102, 126, 234, 0.25);
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+}
+.bug-fab-save-btn .btn-icon {
+  font-size: 20px;
+  margin-right: 4px;
+}
+@media (max-width: 600px) {
+  .bug-fab-save-btn {
+    right: 12px;
+    bottom: 16px;
+    padding: 10px 16px 10px 14px;
+    font-size: 14px;
+  }
+}

@@ -26,7 +26,11 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["content/consoleInterceptor.js", "content/networkInterceptor.js"],
+      "resources": [
+        "content/consoleInterceptor.js",
+        "content/networkInterceptor.js",
+        "content/inject.css"
+      ],
       "matches": ["<all_urls>"]
     }
   ],

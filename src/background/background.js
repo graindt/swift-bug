@@ -54,6 +54,17 @@ class BugReporterBackground {
           sendResponse({ success: true });
           break;
 
+        case 'saveBugSnapshotFromFab':
+          // 1. 获取当前激活标签页
+          const fabTab = sender.tab || await this.getCurrentActiveTab();
+          // 2. 收集页面数据
+          const fabPageData = await this.collectPageData(fabTab);
+          // 3. 保存 bug 报告（无需填写标题/描述）
+          await this.saveBugReport(fabPageData);
+          // 4. 可选：通知 content script 显示保存成功提示
+          sendResponse({ success: true });
+          break;
+
         default:
           sendResponse({ success: false, error: 'Unknown action' });
       }

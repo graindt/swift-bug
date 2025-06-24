@@ -24,15 +24,6 @@ const maxLogEntries = 100;
 (function injectNetworkInterceptor() {
   // Get settings from storage to configure network capture
   chrome.storage.local.get(['settings'], (result) => {
-    const settings = result.settings || { captureAllNetworkRequests: false };
-
-    // Set global flag in page context before injecting interceptor
-    const settingsScript = document.createElement('script');
-    settingsScript.textContent = `window.bugReporterCaptureAllRequests = ${settings.captureAllNetworkRequests || false};`;
-    document.documentElement.appendChild(settingsScript);
-    settingsScript.remove();
-
-    // Then inject the network interceptor
     const script = document.createElement('script');
     script.src = chrome.runtime.getURL('content/networkInterceptor.js');
     script.onload = () => script.remove();
@@ -231,3 +222,45 @@ window.bugReporterContentLoaded = true;
 
 // Debug log
 console.log('BugReporter: Content Script Loaded', bugReporterContent.getPageState());
+
+// 注入悬浮保存Bug快照按钮到页面右下角
+// (function injectBugFabButton() {
+//   if (window.__bugFabInjected) return;
+//   window.__bugFabInjected = true;
+
+//   function doInject() {
+//     // 注入样式
+//     const style = document.createElement('link');
+//     style.rel = 'stylesheet';
+//     style.type = 'text/css';
+//     style.href = chrome.runtime.getURL('content/inject.css');
+//     if (document.head) {
+//       document.head.appendChild(style);
+//     } else {
+//       document.documentElement.appendChild(style);
+//     }
+
+//     // 创建按钮
+//     const fabBtn = document.createElement('button');
+//     fabBtn.className = 'bug-fab-save-btn';
+//     fabBtn.id = 'bugFabSaveBtn';
+//     fabBtn.title = '保存Bug快照';
+//     fabBtn.innerHTML = '<span class="btn-icon">📸</span>保存Bug快照';
+//     if (document.body) {
+//       document.body.appendChild(fabBtn);
+//     } else {
+//       document.documentElement.appendChild(fabBtn);
+//     }
+
+//     // 点击事件：通知background保存快照
+//     fabBtn.addEventListener('click', () => {
+//       chrome.runtime.sendMessage({ action: 'saveBugSnapshotFromFab' });
+//     });
+//   }
+
+//   if (document.readyState === 'loading') {
+//     document.addEventListener('DOMContentLoaded', doInject);
+//   } else {
+//     doInject();
+//   }
+// })();

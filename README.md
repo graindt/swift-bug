@@ -119,7 +119,7 @@
 
 ## 文件结构预览
 ```
-chrome-bug-reporter/
+src/
 ├── manifest.json          # 插件配置文件
 ├── popup/                 # 弹出窗口
 │   ├── popup.html
