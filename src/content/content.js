@@ -65,7 +65,7 @@ window.addEventListener('message', event => {
   }
 });
 
-// Content script for Chrome Bug Reporter
+// Content script for Swift Bug
 class BugReporterContent {
   constructor() {
     this.consoleLog = window.bugReporterCapturedLogs || [];

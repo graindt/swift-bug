@@ -1,4 +1,4 @@
-// Utility functions for Chrome Bug Reporter
+// Utility functions for Swift Bug
 class BugReporterUtils {
   // Storage helper methods
   static async getStorageData(keys = null) {

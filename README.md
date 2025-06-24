@@ -1,4 +1,4 @@
-# Chrome Bug Reporter 插件
+# Swift Bug 插件
 
 一个用于保存和复现Web应用Bug的Chrome浏览器插件。
 

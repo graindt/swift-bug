@@ -1,6 +1,6 @@
 # Network Request Capturing Feature
 
-This document describes the network request capturing functionality added to the Chrome Bug Reporter extension.
+This document describes the network request capturing functionality added to the Swift Bug extension.
 
 ## Overview
 

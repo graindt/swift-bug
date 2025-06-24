@@ -1,4 +1,4 @@
-// Background service worker for Chrome Bug Reporter
+// Background service worker for Swift Bug
 class BugReporterBackground {
   constructor() {
     this.setupEventListeners();

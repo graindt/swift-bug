@@ -1,4 +1,4 @@
-// Options page script for Chrome Bug Reporter
+// Options page script for Swift Bug
 class BugReporterOptions {
   constructor() {
     this.settings = {};

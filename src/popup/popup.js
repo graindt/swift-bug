@@ -1,4 +1,4 @@
-// Popup script for Chrome Bug Reporter
+// Popup script for Swift Bug
 class BugReporterPopup {
   constructor() {
     this.currentTab = null;
