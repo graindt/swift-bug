@@ -1,5 +1,5 @@
 // UI Renderer - Handles all UI rendering logic
-import { escapeHtml, truncateText } from '../utils/utils.js';
+import { escapeHtml, truncateText } from '../../utils/utils.js';
 
 export class UIRenderer {
   constructor() {}

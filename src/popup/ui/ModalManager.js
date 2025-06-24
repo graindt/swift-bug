@@ -13,8 +13,6 @@ export class ModalManager {
 
     // Expand popup body width for detail view
     document.body.style.width = '1200px';
-    document.body.style.height = '900px';
-    document.body.style.maxHeight = '900px';
 
     // Show the modal
     modal.style.display = 'flex';
@@ -32,8 +30,6 @@ export class ModalManager {
 
     // Restore original popup body size
     document.body.style.width = '400px';
-    document.body.style.height = 'auto';
-    document.body.style.maxHeight = '600px';
 
     // Remove escape key listener
     if (this.isEscapeListenerAdded) {

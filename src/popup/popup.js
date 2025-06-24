@@ -4,7 +4,7 @@ import { UIRenderer } from './ui/UIRenderer.js';
 import { ModalManager } from './ui/ModalManager.js';
 import { FileManager } from './managers/FileManager.js';
 import { EventHandler } from './managers/EventHandler.js';
-import { getCurrentTab, openSettings, showSuccess, showError } from './utils/utils.js';
+import { getCurrentTab, openSettings, showSuccess, showError } from '../utils/utils.js';
 
 class BugReporterPopup {
   constructor() {
