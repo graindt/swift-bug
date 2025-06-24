@@ -189,7 +189,7 @@
 
     <script>
         // Initialize some test data
-        localStorage.setItem('bug-reporter-test', 'This is test data for Swift Bug');
+        localStorage.setItem('swiftbug-reporter-test', 'This is test data for Swift Bug');
         sessionStorage.setItem('session-test', 'Session test data');
 
         console.log('Test page loaded - Swift Bug extension testing');
@@ -318,7 +318,7 @@
         }
 
         function setCookie() {
-            const cookieName = 'bug-reporter-test';
+            const cookieName = 'swiftbug-reporter-test';
             const cookieValue = 'test-value-' + Date.now();
             document.cookie = `${cookieName}=${cookieValue}; path=/; max-age=3600`;
             console.log(`Cookie set: ${cookieName}=${cookieValue}`);

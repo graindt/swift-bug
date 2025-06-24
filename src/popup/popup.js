@@ -146,7 +146,7 @@ class BugReporterPopup {
         const container = document.getElementById('reportsContainer');
         const emptyState = document.getElementById('emptyState');
         // Remove all report items
-        const existingReports = container.querySelectorAll('.bug-report-item');
+        const existingReports = container.querySelectorAll('.swiftbug-report-item');
         existingReports.forEach(item => item.remove());
         // Show empty state
         emptyState.style.display = 'block';

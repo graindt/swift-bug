@@ -20,7 +20,7 @@ export class UIRenderer {
     emptyState.style.display = 'none';
 
     // Clear existing reports (keep loading and empty state)
-    const existingReports = container.querySelectorAll('.bug-report-item');
+    const existingReports = container.querySelectorAll('.swiftbug-report-item');
     existingReports.forEach(item => item.remove());
 
     // Render reports
@@ -31,7 +31,7 @@ export class UIRenderer {
 
   createReportElement(report, eventCallback) {
     const div = document.createElement('div');
-    div.className = 'bug-report-item';
+    div.className = 'swiftbug-report-item';
 
     // Format date
     const date = new Date(report.timestamp);
@@ -47,12 +47,12 @@ export class UIRenderer {
     }
 
     div.innerHTML = `
-      <div class="bug-report-header">
-        <div class="bug-report-title">${escapeHtml(report.title)}</div>
-        <div class="bug-report-time">${formattedDate}</div>
+      <div class="swiftbug-report-header">
+        <div class="swiftbug-report-title">${escapeHtml(report.title)}</div>
+        <div class="swiftbug-report-time">${formattedDate}</div>
       </div>
-      <div class="bug-report-url">${escapeHtml(domain)}</div>
-      <div class="bug-report-actions">
+      <div class="swiftbug-report-url">${escapeHtml(domain)}</div>
+      <div class="swiftbug-report-actions">
         <button class="btn btn-small btn-view" data-action="view" data-id="${report.id}">查看</button>
         <button class="btn btn-small btn-export" data-action="export" data-id="${report.id}">导出</button>
         <button class="btn btn-small btn-delete" data-action="delete" data-id="${report.id}">删除</button>

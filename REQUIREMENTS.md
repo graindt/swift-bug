@@ -91,7 +91,7 @@
 - 支持数据压缩减少文件大小
 
 **文件命名规则：**
-- 单个Bug: `bug-report-{url-domain}-{timestamp}.json`
+- 单个Bug: `swiftbug-report-{url-domain}-{timestamp}.json`
 
 #### 2.3.2 导出选项
 - 单个Bug报告导出

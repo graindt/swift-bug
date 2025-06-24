@@ -316,7 +316,7 @@ class BugReporterBackground {
     // Create filename
     const date = new Date(report.timestamp);
     const domain = new URL(report.url).hostname;
-    const filename = `bug-report-${domain}-${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}-${Date.now()}.json`;
+    const filename = `swiftswiftbug-report-${domain}-${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}-${Date.now()}.json`;
 
     // Download file using data URI (service worker context)
     const jsonStr = JSON.stringify(exportData, null, 2);

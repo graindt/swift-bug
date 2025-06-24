@@ -74,7 +74,7 @@
 
     // Send to content script
     window.postMessage({
-      source: 'bug-reporter-network',
+      source: 'swiftbug-reporter-network',
       networkRequest: requestData
     }, '*');
   }

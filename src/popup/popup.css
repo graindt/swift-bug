@@ -150,7 +150,7 @@ body {
 }
 
 /* Bug Reports Section */
-.bug-reports {
+.swiftbug-reports {
   padding: 20px;
   border-bottom: 1px solid #e1e5e9;
 }
@@ -210,7 +210,7 @@ body {
 }
 
 /* Bug Report Item */
-.bug-report-item {
+.swiftbug-report-item {
   border: 1px solid #e1e5e9;
   border-radius: 8px;
   padding: 12px;
@@ -219,19 +219,19 @@ body {
   transition: all 0.2s ease;
 }
 
-.bug-report-item:hover {
+.swiftbug-report-item:hover {
   border-color: #667eea;
   box-shadow: 0 2px 4px rgba(102, 126, 234, 0.1);
 }
 
-.bug-report-header {
+.swiftbug-report-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 8px;
 }
 
-.bug-report-title {
+.swiftbug-report-title {
   font-weight: 500;
   color: #333;
   font-size: 13px;
@@ -239,20 +239,20 @@ body {
   margin-right: 8px;
 }
 
-.bug-report-time {
+.swiftbug-report-time {
   font-size: 11px;
   color: #666;
   white-space: nowrap;
 }
 
-.bug-report-url {
+.swiftbug-report-url {
   font-size: 12px;
   color: #666;
   margin-bottom: 8px;
   word-break: break-all;
 }
 
-.bug-report-actions {
+.swiftbug-report-actions {
   display: flex;
   gap: 4px;
 }

@@ -15,7 +15,7 @@
         timestamp: new Date().toISOString(),
         message: args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ')
       };
-      window.postMessage({ source: 'bug-reporter', logEntry: entry }, '*');
+      window.postMessage({ source: 'swiftbug-reporter', logEntry: entry }, '*');
     };
   }
   console.log = capture('log', originalConsole.log);

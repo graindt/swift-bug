@@ -39,7 +39,7 @@ const maxNetworkRequests = 50;
 window.addEventListener('message', event => {
   if (event.source === window && event.data) {
     // Handle console logs
-    if (event.data.source === 'bug-reporter') {
+    if (event.data.source === 'swiftbug-reporter') {
       window.bugReporterCapturedLogs.push(event.data.logEntry);
       if (window.bugReporterCapturedLogs.length > maxLogEntries) {
         window.bugReporterCapturedLogs = window.bugReporterCapturedLogs.slice(-maxLogEntries);
@@ -47,7 +47,7 @@ window.addEventListener('message', event => {
     }
 
     // Handle network requests
-    if (event.data.source === 'bug-reporter-network') {
+    if (event.data.source === 'swiftbug-reporter-network') {
       window.bugReporterNetworkRequests.push(event.data.networkRequest);
       if (window.bugReporterNetworkRequests.length > maxNetworkRequests) {
         window.bugReporterNetworkRequests = window.bugReporterNetworkRequests.slice(-maxNetworkRequests);

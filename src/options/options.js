@@ -231,7 +231,7 @@ class BugReporterOptions {
       const dateStr = now.getFullYear() +
                      String(now.getMonth() + 1).padStart(2, '0') +
                      String(now.getDate()).padStart(2, '0');
-      const filename = `bug-reports-all-${dateStr}-${Date.now()}.json`;
+      const filename = `swiftbug-reports-all-${dateStr}-${Date.now()}.json`;
 
       // Download file
       const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
