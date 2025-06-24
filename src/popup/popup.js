@@ -269,13 +269,16 @@ class BugReporterPopup {
       const text = await this.readFileAsText(file);
       const data = JSON.parse(text);
 
-      // Validate file format
-      if (!data.report || !data.report.url) {
+      // Validate file format and support both wrapped and raw report
+      let report;
+      if (data.report && data.report.url) {
+        report = data.report;
+      } else if (data.url && data.url && data.id) {
+        report = data;
+      } else {
         throw new Error('Invalid bug report file format');
       }
 
-      // Confirm restoration
-      const report = data.report;
       const domain = new URL(report.url).hostname;
       const confirmMsg = `确定要还原Bug现场吗？\n\n页面: ${domain}\n时间: ${new Date(report.timestamp).toLocaleString('zh-CN')}\n\n这将导航到原始页面并还原所有数据。`;
 

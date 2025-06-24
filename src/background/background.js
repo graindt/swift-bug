@@ -305,58 +305,68 @@ class BugReporterBackground {
   }
 
   async injectBugData(bugData, tabId) {
-    // Restore cookies
-    if (bugData.cookies && bugData.cookies.length > 0) {
-      for (const cookie of bugData.cookies) {
-        try {
-          await chrome.cookies.set({
-            url: `${cookie.secure ? 'https' : 'http'}://${cookie.domain}${cookie.path}`,
-            name: cookie.name,
-            value: cookie.value,
-            domain: cookie.domain,
-            path: cookie.path,
-            secure: cookie.secure,
-            httpOnly: cookie.httpOnly,
-            expirationDate: cookie.expirationDate
-          });
-        } catch (error) {
-          console.error('Error setting cookie:', error);
-        }
-      }
-    }
+    console.log('injectBugData: starting restoration for tab', tabId, bugData);
+    // Use the original report URL origin for setting cookies
+    const reportOrigin = new URL(bugData.url).origin;
+     // Restore cookies
+     if (bugData.cookies && bugData.cookies.length > 0) {
+       for (const cookie of bugData.cookies) {
+         console.log('injectBugData: setting cookie', cookie);
+         try {
+          // Construct URL using report origin and cookie path
+          const url = `${reportOrigin}${cookie.path}`;
+           await chrome.cookies.set({
+             url,
+             name: cookie.name,
+             value: cookie.value,
+             domain: cookie.domain,
+             path: cookie.path,
+             secure: cookie.secure,
+             httpOnly: cookie.httpOnly,
+             expirationDate: cookie.expirationDate
+           });
+          console.log('injectBugData: cookie set successfully for', cookie.name);
+         } catch (error) {
+           console.error('Error setting cookie:', error);
+         }
+       }
+      console.log('injectBugData: all cookies restored for tab', tabId);
+     }
 
-    // Inject storage data
-    try {
-      await chrome.scripting.executeScript({
-        target: { tabId },
-        func: (localStorageData, sessionStorageData) => {
-          // Restore localStorage
-          Object.entries(localStorageData).forEach(([key, value]) => {
-            try {
-              localStorage.setItem(key, value);
-            } catch (error) {
-              console.error('Error setting localStorage item:', error);
-            }
-          });
+     // Inject storage data
+     try {
+       await chrome.scripting.executeScript({
+         target: { tabId },
+         func: (localStorageData, sessionStorageData) => {
+           // Restore localStorage
+           Object.entries(localStorageData).forEach(([key, value]) => {
+             try {
+               localStorage.setItem(key, value);
+             } catch (error) {
+               console.error('Error setting localStorage item:', error);
+             }
+           });
 
-          // Restore sessionStorage
-          Object.entries(sessionStorageData).forEach(([key, value]) => {
-            try {
-              sessionStorage.setItem(key, value);
-            } catch (error) {
-              console.error('Error setting sessionStorage item:', error);
-            }
-          });
-        },
-        args: [bugData.localStorage || {}, bugData.sessionStorage || {}]
-      });
-    } catch (error) {
-      console.error('Error injecting storage data:', error);
-    }
+           // Restore sessionStorage
+           Object.entries(sessionStorageData).forEach(([key, value]) => {
+             try {
+               sessionStorage.setItem(key, value);
+             } catch (error) {
+               console.error('Error setting sessionStorage item:', error);
+             }
+           });
+         },
+         args: [bugData.localStorage || {}, bugData.sessionStorage || {}]
+       });
+      console.log('injectBugData: storage data injected for tab', tabId);
+     } catch (error) {
+       console.error('Error injecting storage data:', error);
+     }
 
-    // Refresh the page to apply all changes
-    await chrome.tabs.reload(tabId);
-  }
+     // Refresh the page to apply all changes
+     await chrome.tabs.reload(tabId);
+    console.log('injectBugData: page reloaded for tab', tabId);
+   }
 
 }
 
