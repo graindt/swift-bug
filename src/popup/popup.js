@@ -211,8 +211,11 @@ class BugReporterPopup {
       return;
     }
 
-    // Show report details (could open options page or show modal)
-    this.showSuccess(`报告: ${report.title} (${new Date(report.timestamp).toLocaleString('zh-CN')})`);
+    // Display full report data in new tab as JSON
+    const dataStr = JSON.stringify(report, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
   }
 
   async exportReport(reportId) {
