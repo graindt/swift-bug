@@ -304,10 +304,25 @@ class BugReporterBackground {
   }
 
   async restoreBugData(bugData, tab) {
+    // Save bugData if id does not exist in storage
+    const result = await chrome.storage.local.get(['bugReports']);
+    const bugReports = result.bugReports || {};
+    if (!bugData.id || !bugReports[bugData.id]) {
+      // Generate id if missing
+      const reportId = bugData.id || `bug_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const bugReport = {
+        id: reportId,
+        timestamp: bugData.timestamp || new Date().toISOString(),
+        title: bugData.title || `Bug Report - ${new URL(bugData.url).hostname}`,
+        description: bugData.description || '',
+        ...bugData
+      };
+      bugReports[reportId] = bugReport;
+      await chrome.storage.local.set({ bugReports });
+    }
     // Navigate to the bug URL if different
     if (tab.url !== bugData.url) {
       await chrome.tabs.update(tab.id, { url: bugData.url });
-
       // Wait for navigation to complete
       return new Promise((resolve) => {
         const listener = (tabId, changeInfo) => {

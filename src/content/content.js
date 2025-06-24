@@ -203,7 +203,7 @@ class BugReporterContent {
       }
     });
 
-    console.log('Bug Reporter: Storage data restored');
+    console.log('Swift Bug: Storage data restored');
   }
 
   // Get current page state for debugging

@@ -88,7 +88,7 @@ New settings added to extension:
 ### Using the Test Page
 
 1. Open `tests/network-test.html` in Chrome
-2. Ensure the Bug Reporter extension is installed
+2. Ensure the Swift Bug extension is installed
 3. Click various request buttons to generate network activity
 4. Open the extension popup and create a bug report
 5. Export the report and verify network requests are included

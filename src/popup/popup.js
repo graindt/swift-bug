@@ -137,6 +137,7 @@ class BugReporterPopup {
         <button class="btn btn-small btn-view" data-action="view" data-id="${report.id}">查看</button>
         <button class="btn btn-small btn-export" data-action="export" data-id="${report.id}">导出</button>
         <button class="btn btn-small btn-delete" data-action="delete" data-id="${report.id}">删除</button>
+        <button class="btn btn-small btn-restore" data-action="restore" data-id="${report.id}">还原</button>
       </div>
     `;
 
@@ -209,6 +210,9 @@ class BugReporterPopup {
           break;
         case 'delete':
           await this.deleteReport(reportId);
+          break;
+        case 'restore':
+          await this.restoreReport(reportId);
           break;
       }
     } catch (error) {
@@ -545,6 +549,28 @@ class BugReporterPopup {
     }
   }
 
+  async restoreReport(reportId) {
+    // Find the report
+    const report = this.reports.find(r => r.id === reportId);
+    if (!report) {
+      this.showError('报告不存在');
+      return;
+    }
+    try {
+      const response = await this.sendMessage({
+        action: 'restoreBugData',
+        data: report
+      });
+      if (response.success) {
+        this.showSuccess('还原成功！页面已自动跳转并恢复数据。');
+      } else {
+        throw new Error(response.error);
+      }
+    } catch (error) {
+      this.showError('还原失败: ' + error.message);
+    }
+  }
+
   importBugReport() {
     document.getElementById('fileInput').click();
   }
@@ -565,13 +591,6 @@ class BugReporterPopup {
         report = data;
       } else {
         throw new Error('Invalid bug report file format');
-      }
-
-      const domain = new URL(report.url).hostname;
-      const confirmMsg = `确定要还原Bug现场吗？\n\n页面: ${domain}\n时间: ${new Date(report.timestamp).toLocaleString('zh-CN')}\n\n这将导航到原始页面并还原所有数据。`;
-
-      if (!confirm(confirmMsg)) {
-        return;
       }
 
       // Restore bug data

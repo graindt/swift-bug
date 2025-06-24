@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bug Reporter Test Page</title>
+    <title>Swift Bug Test Page</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -119,7 +119,7 @@
             <strong>Instructions:</strong>
             <ol>
                 <li>Load this page in Chrome</li>
-                <li>Install the Bug Reporter extension</li>
+                <li>Install the Swift Bug extension</li>
                 <li>Interact with the elements below to generate console logs and data</li>
                 <li>Click the extension icon and save a bug snapshot</li>
                 <li>Test the export/import functionality</li>
@@ -189,10 +189,10 @@
 
     <script>
         // Initialize some test data
-        localStorage.setItem('bug-reporter-test', 'This is test data for Bug Reporter');
+        localStorage.setItem('bug-reporter-test', 'This is test data for Swift Bug');
         sessionStorage.setItem('session-test', 'Session test data');
 
-        console.log('Test page loaded - Bug Reporter extension testing');
+        console.log('Test page loaded - Swift Bug extension testing');
         console.info('Page ready for bug reporting tests');
 
         // LocalStorage functions
@@ -271,12 +271,12 @@
         function generateError() {
             console.log('About to generate an error...');
             // This will throw an error
-            throw new Error('This is a test error generated for Bug Reporter testing');
+            throw new Error('This is a test error generated for Swift Bug testing');
         }
 
         function generatePromiseRejection() {
             console.log('About to generate a promise rejection...');
-            Promise.reject(new Error('Test promise rejection for Bug Reporter'));
+            Promise.reject(new Error('Test promise rejection for Swift Bug'));
         }
 
         function generateNetworkError() {

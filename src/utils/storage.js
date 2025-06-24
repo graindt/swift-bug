@@ -78,7 +78,7 @@ class BugReporterUtils {
 
   // Error handling
   static handleError(error, context = '') {
-    const errorMessage = `[Bug Reporter${context ? ' - ' + context : ''}] ${error.message}`;
+    const errorMessage = `[Swift Bug${context ? ' - ' + context : ''}] ${error.message}`;
     console.error(errorMessage, error);
     return errorMessage;
   }
