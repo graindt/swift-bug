@@ -41,12 +41,16 @@ class BugReporterBackground {
           break;
 
         case 'collectPageData':
-          const pageData = await this.collectPageData(sender.tab);
+          // Get current active tab if sender.tab is not available
+          const tab = sender.tab || await this.getCurrentActiveTab();
+          const pageData = await this.collectPageData(tab);
           sendResponse({ success: true, data: pageData });
           break;
 
         case 'restoreBugData':
-          await this.restoreBugData(message.data, sender.tab);
+          // Get current active tab if sender.tab is not available
+          const restoreTab = sender.tab || await this.getCurrentActiveTab();
+          await this.restoreBugData(message.data, restoreTab);
           sendResponse({ success: true });
           break;
 
@@ -57,6 +61,11 @@ class BugReporterBackground {
       console.error('Background script error:', error);
       sendResponse({ success: false, error: error.message });
     }
+  }
+
+  async getCurrentActiveTab() {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    return tabs[0];
   }
 
   async initializeStorage() {
@@ -79,6 +88,10 @@ class BugReporterBackground {
   }
 
   async collectPageData(tab) {
+    if (!tab) {
+      throw new Error('No active tab found');
+    }
+
     const pageData = {
       url: tab.url,
       title: tab.title,
