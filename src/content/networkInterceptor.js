@@ -29,10 +29,30 @@
     return data;
   }
 
+  // Helper function to check if request should be captured (only errors by default)
+  function shouldCaptureRequest(requestData) {
+    // Get capture setting from window (can be set by extension settings)
+    const captureAllRequests = window.bugReporterCaptureAllRequests || false;
+
+    if (captureAllRequests) {
+      return true; // Capture all requests if setting is enabled
+    }
+
+    // By default, only capture failed requests
+    return requestData.status === 0 || // Network error
+           requestData.status >= 400 || // HTTP error (4xx, 5xx)
+           requestData.statusText === 'Network Error';
+  }
+
   // Helper function to add network request
   function addNetworkRequest(requestData) {
     // Skip if should be ignored
     if (shouldIgnoreRequest(requestData.url)) {
+      return;
+    }
+
+    // Only capture if it's an error request (by default)
+    if (!shouldCaptureRequest(requestData)) {
       return;
     }
 

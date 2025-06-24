@@ -4,7 +4,7 @@ This document describes the network request capturing functionality added to the
 
 ## Overview
 
-The extension now captures network requests (XHR and Fetch) made by web pages, providing detailed information about API calls, responses, and potential network-related bugs.
+The extension now captures failed network requests (XHR and Fetch) made by web pages by default, providing detailed information about API errors, failed responses, and potential network-related bugs. This approach significantly reduces memory usage while focusing on the most relevant debugging information.
 
 ## Implementation Details
 
@@ -66,9 +66,22 @@ The extension now captures network requests (XHR and Fetch) made by web pages, p
 New settings added to extension:
 
 - `includeNetworkRequests`: Enable/disable network capturing (default: true)
+- `captureAllNetworkRequests`: Capture all requests vs only failed requests (default: false)
 - `maxNetworkRequests`: Maximum number of requests to store (default: 50)
 - `maxRequestBodySize`: Maximum size of request/response bodies (default: 10240 bytes)
 - `ignoreStaticResources`: Filter out static assets (default: true)
+
+### Capture Modes
+
+- **Default Mode** (`captureAllNetworkRequests: false`): Only captures failed requests
+  - HTTP status codes 400-599 (client/server errors)
+  - Network errors (status 0)
+  - Requests with "Network Error" status text
+
+- **Full Capture Mode** (`captureAllNetworkRequests: true`): Captures all requests
+  - All successful and failed requests
+  - Higher memory usage
+  - Useful for comprehensive debugging
 
 ## Testing
 

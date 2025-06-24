@@ -20,12 +20,24 @@ const maxLogEntries = 100;
   document.documentElement.appendChild(script);
 })();
 
-// Inject network interceptor script
+// Inject network interceptor script with settings
 (function injectNetworkInterceptor() {
-  const script = document.createElement('script');
-  script.src = chrome.runtime.getURL('content/networkInterceptor.js');
-  script.onload = () => script.remove();
-  document.documentElement.appendChild(script);
+  // Get settings from storage to configure network capture
+  chrome.storage.local.get(['settings'], (result) => {
+    const settings = result.settings || { captureAllNetworkRequests: false };
+
+    // Set global flag in page context before injecting interceptor
+    const settingsScript = document.createElement('script');
+    settingsScript.textContent = `window.bugReporterCaptureAllRequests = ${settings.captureAllNetworkRequests || false};`;
+    document.documentElement.appendChild(settingsScript);
+    settingsScript.remove();
+
+    // Then inject the network interceptor
+    const script = document.createElement('script');
+    script.src = chrome.runtime.getURL('content/networkInterceptor.js');
+    script.onload = () => script.remove();
+    document.documentElement.appendChild(script);
+  });
 })();
 
 // Listen for forwarded page logs and network requests

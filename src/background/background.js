@@ -81,6 +81,7 @@ class BugReporterBackground {
           maxStoredReports: 50,
           includeScreenshot: true,
           includeNetworkRequests: true,
+          captureAllNetworkRequests: false, // Only capture failed requests by default
           maxConsoleLines: 100,
           maxNetworkRequests: 50,
           maxRequestBodySize: 10240,
