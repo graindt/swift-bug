@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Create Chrome Extension Icons</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .icon-creator {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .icon {
+            display: inline-block;
+            text-align: center;
+            margin: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .icon-16 { width: 16px; height: 16px; font-size: 12px; line-height: 16px; }
+        .icon-32 { width: 32px; height: 32px; font-size: 24px; line-height: 32px; }
+        .icon-48 { width: 48px; height: 48px; font-size: 36px; line-height: 48px; }
+        .icon-128 { width: 128px; height: 128px; font-size: 96px; line-height: 128px; }
+
+        .bug-icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+        }
+
+        canvas {
+            border: 1px solid #ddd;
+            margin: 5px;
+        }
+
+        .download-section {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #5a6fd8;
+        }
+    </style>
+</head>
+<body>
+    <div class="icon-creator">
+        <h1>🐛 Chrome Bug Reporter - Icon Creator</h1>
+        <p>This page creates placeholder icons for the Chrome extension. Click the buttons below to generate and download the icon files.</p>
+
+        <div class="preview">
+            <h3>Icon Preview:</h3>
+            <div class="icon icon-16 bug-icon">🐛</div>
+            <div class="icon icon-32 bug-icon">🐛</div>
+            <div class="icon icon-48 bug-icon">🐛</div>
+            <div class="icon icon-128 bug-icon">🐛</div>
+        </div>
+
+        <div class="canvas-section">
+            <h3>Generated Icons:</h3>
+            <canvas id="icon-16" width="16" height="16"></canvas>
+            <canvas id="icon-32" width="32" height="32"></canvas>
+            <canvas id="icon-48" width="48" height="48"></canvas>
+            <canvas id="icon-128" width="128" height="128"></canvas>
+        </div>
+
+        <div class="download-section">
+            <button onclick="generateIcons()">Generate Icons</button>
+            <button onclick="downloadIcon('icon-16', 'icon-16.png')">Download 16x16</button>
+            <button onclick="downloadIcon('icon-32', 'icon-32.png')">Download 32x32</button>
+            <button onclick="downloadIcon('icon-48', 'icon-48.png')">Download 48x48</button>
+            <button onclick="downloadIcon('icon-128', 'icon-128.png')">Download 128x128</button>
+            <button onclick="downloadAllIcons()">Download All</button>
+        </div>
+    </div>
+
+    <script>
+        function createIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+
+            // Create gradient background
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+
+            // Fill background
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+
+            // Add bug emoji or text
+            ctx.fillStyle = 'white';
+            ctx.font = `bold ${size * 0.6}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Try to use emoji first, fallback to text
+            const text = size > 16 ? '🐛' : 'B';
+            ctx.fillText(text, size / 2, size / 2);
+        }
+
+        function generateIcons() {
+            const sizes = [16, 32, 48, 128];
+            sizes.forEach(size => {
+                const canvas = document.getElementById(`icon-${size}`);
+                createIcon(canvas, size);
+            });
+        }
+
+        function downloadIcon(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function downloadAllIcons() {
+            const sizes = [16, 32, 48, 128];
+            sizes.forEach(size => {
+                setTimeout(() => {
+                    downloadIcon(`icon-${size}`, `icon-${size}.png`);
+                }, size * 10); // Stagger downloads
+            });
+        }
+
+        // Generate icons on page load
+        window.onload = function() {
+            generateIcons();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bug Reporter Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            background: #f8f9fa;
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #667eea;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #5a6fd8;
+        }
+        .error-btn {
+            background: #dc3545;
+        }
+        .error-btn:hover {
+            background: #c82333;
+        }
+        .warning-btn {
+            background: #ffc107;
+            color: #333;
+        }
+        .warning-btn:hover {
+            background: #e0a800;
+        }
+        .input-group {
+            margin: 10px 0;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            display: none;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f1aeb5;
+        }
+        .info-box {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .code {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐛 Chrome Bug Reporter - Test Page</h1>
+
+        <div class="info-box">
+            <strong>Instructions:</strong>
+            <ol>
+                <li>Load this page in Chrome</li>
+                <li>Install the Bug Reporter extension</li>
+                <li>Interact with the elements below to generate console logs and data</li>
+                <li>Click the extension icon and save a bug snapshot</li>
+                <li>Test the export/import functionality</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h2>Console Log Testing</h2>
+            <button onclick="console.log('Regular log message from test page')">Log Message</button>
+            <button onclick="console.warn('Warning message for testing')" class="warning-btn">Log Warning</button>
+            <button onclick="console.error('Error message for testing')" class="error-btn">Log Error</button>
+            <button onclick="console.info('Info message with data:', {user: 'test', timestamp: Date.now()})">Log Info with Data</button>
+        </div>
+
+        <div class="section">
+            <h2>LocalStorage Testing</h2>
+            <div class="input-group">
+                <label for="localKey">Key:</label>
+                <input type="text" id="localKey" placeholder="Enter key name">
+            </div>
+            <div class="input-group">
+                <label for="localValue">Value:</label>
+                <input type="text" id="localValue" placeholder="Enter value">
+            </div>
+            <button onclick="setLocalStorage()">Set LocalStorage</button>
+            <button onclick="getLocalStorage()">Get LocalStorage</button>
+            <button onclick="clearLocalStorage()">Clear LocalStorage</button>
+            <div id="localStorageStatus" class="status"></div>
+        </div>
+
+        <div class="section">
+            <h2>SessionStorage Testing</h2>
+            <div class="input-group">
+                <label for="sessionKey">Key:</label>
+                <input type="text" id="sessionKey" placeholder="Enter key name">
+            </div>
+            <div class="input-group">
+                <label for="sessionValue">Value:</label>
+                <input type="text" id="sessionValue" placeholder="Enter value">
+            </div>
+            <button onclick="setSessionStorage()">Set SessionStorage</button>
+            <button onclick="getSessionStorage()">Get SessionStorage</button>
+            <button onclick="clearSessionStorage()">Clear SessionStorage</button>
+            <div id="sessionStorageStatus" class="status"></div>
+        </div>
+
+        <div class="section">
+            <h2>Error Generation</h2>
+            <button onclick="generateError()" class="error-btn">Generate JavaScript Error</button>
+            <button onclick="generatePromiseRejection()" class="error-btn">Generate Promise Rejection</button>
+            <button onclick="generateNetworkError()" class="error-btn">Generate Network Error</button>
+        </div>
+
+        <div class="section">
+            <h2>Current Page State</h2>
+            <button onclick="showPageState()">Show Page State</button>
+            <div id="pageState" class="code" style="display: none;"></div>
+        </div>
+
+        <div class="section">
+            <h2>Cookie Testing</h2>
+            <button onclick="setCookie()">Set Test Cookie</button>
+            <button onclick="showCookies()">Show All Cookies</button>
+            <div id="cookieInfo" class="code" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize some test data
+        localStorage.setItem('bug-reporter-test', 'This is test data for Bug Reporter');
+        sessionStorage.setItem('session-test', 'Session test data');
+
+        console.log('Test page loaded - Bug Reporter extension testing');
+        console.info('Page ready for bug reporting tests');
+
+        // LocalStorage functions
+        function setLocalStorage() {
+            const key = document.getElementById('localKey').value;
+            const value = document.getElementById('localValue').value;
+
+            if (key && value) {
+                localStorage.setItem(key, value);
+                showStatus('localStorageStatus', `Set: ${key} = ${value}`, 'success');
+                console.log(`LocalStorage set: ${key} = ${value}`);
+            } else {
+                showStatus('localStorageStatus', 'Please enter both key and value', 'error');
+            }
+        }
+
+        function getLocalStorage() {
+            const key = document.getElementById('localKey').value;
+
+            if (key) {
+                const value = localStorage.getItem(key);
+                if (value !== null) {
+                    showStatus('localStorageStatus', `${key} = ${value}`, 'success');
+                    console.log(`LocalStorage get: ${key} = ${value}`);
+                } else {
+                    showStatus('localStorageStatus', `Key "${key}" not found`, 'error');
+                }
+            } else {
+                showStatus('localStorageStatus', 'Please enter a key', 'error');
+            }
+        }
+
+        function clearLocalStorage() {
+            localStorage.clear();
+            showStatus('localStorageStatus', 'LocalStorage cleared', 'success');
+            console.log('LocalStorage cleared');
+        }
+
+        // SessionStorage functions
+        function setSessionStorage() {
+            const key = document.getElementById('sessionKey').value;
+            const value = document.getElementById('sessionValue').value;
+
+            if (key && value) {
+                sessionStorage.setItem(key, value);
+                showStatus('sessionStorageStatus', `Set: ${key} = ${value}`, 'success');
+                console.log(`SessionStorage set: ${key} = ${value}`);
+            } else {
+                showStatus('sessionStorageStatus', 'Please enter both key and value', 'error');
+            }
+        }
+
+        function getSessionStorage() {
+            const key = document.getElementById('sessionKey').value;
+
+            if (key) {
+                const value = sessionStorage.getItem(key);
+                if (value !== null) {
+                    showStatus('sessionStorageStatus', `${key} = ${value}`, 'success');
+                    console.log(`SessionStorage get: ${key} = ${value}`);
+                } else {
+                    showStatus('sessionStorageStatus', `Key "${key}" not found`, 'error');
+                }
+            } else {
+                showStatus('sessionStorageStatus', 'Please enter a key', 'error');
+            }
+        }
+
+        function clearSessionStorage() {
+            sessionStorage.clear();
+            showStatus('sessionStorageStatus', 'SessionStorage cleared', 'success');
+            console.log('SessionStorage cleared');
+        }
+
+        // Error generation functions
+        function generateError() {
+            console.log('About to generate an error...');
+            // This will throw an error
+            throw new Error('This is a test error generated for Bug Reporter testing');
+        }
+
+        function generatePromiseRejection() {
+            console.log('About to generate a promise rejection...');
+            Promise.reject(new Error('Test promise rejection for Bug Reporter'));
+        }
+
+        function generateNetworkError() {
+            console.log('About to generate a network error...');
+            fetch('https://nonexistent-domain-for-testing.com/api/test')
+                .catch(error => {
+                    console.error('Network error:', error);
+                });
+        }
+
+        // Utility functions
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${type}`;
+            element.style.display = 'block';
+
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 3000);
+        }
+
+        function showPageState() {
+            const state = {
+                url: window.location.href,
+                title: document.title,
+                timestamp: new Date().toISOString(),
+                localStorage: Object.keys(localStorage).length,
+                sessionStorage: Object.keys(sessionStorage).length,
+                cookies: document.cookie.split(';').length,
+                userAgent: navigator.userAgent.substring(0, 100) + '...'
+            };
+
+            const element = document.getElementById('pageState');
+            element.textContent = JSON.stringify(state, null, 2);
+            element.style.display = 'block';
+
+            console.log('Page state:', state);
+        }
+
+        function setCookie() {
+            const cookieName = 'bug-reporter-test';
+            const cookieValue = 'test-value-' + Date.now();
+            document.cookie = `${cookieName}=${cookieValue}; path=/; max-age=3600`;
+            console.log(`Cookie set: ${cookieName}=${cookieValue}`);
+        }
+
+        function showCookies() {
+            const cookies = document.cookie || 'No cookies found';
+            const element = document.getElementById('cookieInfo');
+            element.textContent = cookies;
+            element.style.display = 'block';
+            console.log('Current cookies:', cookies);
+        }
+
+        // Add some periodic activity for testing
+        setInterval(() => {
+            console.log(`Periodic log message - ${new Date().toLocaleTimeString()}`);
+        }, 30000); // Every 30 seconds
+    </script>
+</body>
+</html>

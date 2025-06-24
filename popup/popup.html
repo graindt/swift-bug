@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bug Reporter</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo">
+        <span class="bug-icon">🐛</span>
+        <h1>Bug Reporter</h1>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- Current Page Info -->
+      <section class="current-page">
+        <div class="page-info">
+          <span class="page-label">当前页面:</span>
+          <span class="page-url" id="currentUrl">Loading...</span>
+        </div>
+        <button class="btn btn-primary" id="saveBtn">
+          <span class="btn-icon">📸</span>
+          保存Bug快照
+        </button>
+      </section>
+
+      <!-- Status Messages -->
+      <div class="status-message" id="statusMessage" style="display: none;"></div>
+
+      <!-- Bug Reports List -->
+      <section class="bug-reports">
+        <div class="section-header">
+          <h2>Bug记录</h2>
+          <span class="report-count" id="reportCount">0/50</span>
+        </div>
+
+        <div class="reports-container" id="reportsContainer">
+          <div class="loading" id="loadingReports">加载中...</div>
+          <div class="empty-state" id="emptyState" style="display: none;">
+            <span class="empty-icon">📋</span>
+            <p>暂无Bug记录</p>
+            <p class="empty-hint">点击上方按钮保存第一个Bug快照</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Action Buttons -->
+      <section class="actions">
+        <button class="btn btn-secondary" id="importBtn">
+          <span class="btn-icon">📁</span>
+          导入Bug
+        </button>
+        <button class="btn btn-secondary" id="settingsBtn">
+          <span class="btn-icon">⚙️</span>
+          设置
+        </button>
+      </section>
+    </main>
+
+    <!-- Hidden file input for import -->
+    <input type="file" id="fileInput" accept=".json" style="display: none;">
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

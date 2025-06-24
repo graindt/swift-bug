@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bug Reporter 设置</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo">
+        <span class="bug-icon">🐛</span>
+        <h1>Bug Reporter 设置</h1>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="section">
+        <h2>数据收集设置</h2>
+        <div class="setting-item">
+          <label class="setting-label">
+            <input type="checkbox" id="includeScreenshot">
+            <span class="checkmark"></span>
+            包含页面截图
+          </label>
+          <p class="setting-description">保存Bug快照时自动截取页面截图</p>
+        </div>
+
+        <div class="setting-item">
+          <label class="setting-label">
+            <input type="checkbox" id="includeNetworkRequests">
+            <span class="checkmark"></span>
+            包含网络请求记录
+          </label>
+          <p class="setting-description">记录最近的网络请求信息（实验性功能）</p>
+        </div>
+
+        <div class="setting-item">
+          <label for="maxConsoleLines">控制台日志数量上限</label>
+          <input type="number" id="maxConsoleLines" min="50" max="500" step="10">
+          <p class="setting-description">保存的控制台日志条数（50-500）</p>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>存储设置</h2>
+        <div class="setting-item">
+          <label for="maxStoredReports">最大存储Bug数量</label>
+          <input type="number" id="maxStoredReports" min="10" max="100" step="5">
+          <p class="setting-description">本地最多保存的Bug报告数量（10-100）</p>
+        </div>
+
+        <div class="setting-item">
+          <div class="storage-info">
+            <h3>存储空间使用情况</h3>
+            <div class="storage-bar">
+              <div class="storage-used" id="storageUsed"></div>
+            </div>
+            <p id="storageText">正在计算...</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>数据管理</h2>
+        <div class="setting-item">
+          <button class="btn btn-secondary" id="exportAllBtn">
+            <span class="btn-icon">📤</span>
+            导出所有Bug报告
+          </button>
+          <p class="setting-description">将所有保存的Bug报告导出为单个文件</p>
+        </div>
+
+        <div class="setting-item">
+          <button class="btn btn-danger" id="clearAllBtn">
+            <span class="btn-icon">🗑️</span>
+            清除所有数据
+          </button>
+          <p class="setting-description">删除所有保存的Bug报告和设置（不可恢复）</p>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>关于</h2>
+        <div class="about-info">
+          <p><strong>Chrome Bug Reporter</strong></p>
+          <p>版本: 1.0.0</p>
+          <p>一个用于保存和复现Web应用Bug的Chrome浏览器插件</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <button class="btn btn-primary" id="saveBtn">保存设置</button>
+      <button class="btn btn-secondary" id="resetBtn">重置默认</button>
+    </footer>
+
+    <!-- Status Messages -->
+    <div class="status-message" id="statusMessage" style="display: none;"></div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>
