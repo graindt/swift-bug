@@ -100,7 +100,7 @@ class BugReporterBackground {
   }
 
   async initializeStorage() {
-    const result = await chrome.storage.local.get(['bugReports', 'settings']);
+    const result = await chrome.storage.local.get(['bugReports', 'settings', 'bugReportCache']);
 
     if (!result.bugReports) {
       await chrome.storage.local.set({ bugReports: {} });
@@ -119,6 +119,10 @@ class BugReporterBackground {
           ignoreStaticResources: true
         }
       });
+    }
+    // Initialize cache for fetched bug reports
+    if (!result.bugReportCache) {
+      await chrome.storage.local.set({ bugReportCache: {} });
     }
   }
 
@@ -510,9 +514,15 @@ class BugReporterBackground {
 
   async fetchBugReportFromUrl(url) {
     try {
+      // Cache lookup
+      const { bugReportCache = {} } = await chrome.storage.local.get(['bugReportCache']);
+      if (bugReportCache[url]) {
+        console.log('BugReporter: Returning cached bug report for URL:', url);
+        return bugReportCache[url].data;
+      }
       console.log('BugReporter: Fetching bug report from URL:', url);
 
-      // Fetch the JSON file
+       // Fetch the JSON file
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -526,19 +536,29 @@ class BugReporterBackground {
       }
 
       const jsonData = await response.json();
-
+      let reportData;
       // Check if this is an exported bug report format
       if (jsonData.report) {
-        // This is an exported bug report with version info
         console.log('BugReporter: Found exported bug report format');
-        return jsonData.report;
+        reportData = jsonData.report;
       } else if (jsonData.url && jsonData.timestamp) {
-        // This looks like a direct bug report
         console.log('BugReporter: Found direct bug report format');
-        return jsonData;
+        reportData = jsonData;
       } else {
         throw new Error('不是有效的Bug报告格式');
       }
+      // Store in cache
+      const now = Date.now();
+      bugReportCache[url] = { data: reportData, fetchedAt: now };
+      // Evict oldest entries if cache size exceeds 100
+      const cacheKeys = Object.keys(bugReportCache);
+      if (cacheKeys.length > 100) {
+        cacheKeys.sort((a, b) => bugReportCache[a].fetchedAt - bugReportCache[b].fetchedAt);
+        const removeCount = cacheKeys.length - 100;
+        cacheKeys.slice(0, removeCount).forEach(key => delete bugReportCache[key]);
+      }
+      await chrome.storage.local.set({ bugReportCache });
+      return reportData;
     } catch (error) {
       console.error('BugReporter: Error fetching bug report:', error);
 

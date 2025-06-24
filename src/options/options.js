@@ -92,7 +92,7 @@ class BugReporterOptions {
       // Get storage usage
       const result = await chrome.storage.local.get(null);
       const dataSize = JSON.stringify(result).length;
-      const maxSize = 10 * 1024 * 1024; // 10MB limit for chrome.storage.local
+      const maxSize = 100 * 1024 * 1024; // 10MB limit for chrome.storage.local
 
       const usagePercent = (dataSize / maxSize) * 100;
       const usedMB = (dataSize / (1024 * 1024)).toFixed(2);
@@ -286,7 +286,8 @@ class BugReporterOptions {
 
       await chrome.storage.local.set({
         settings: defaultSettings,
-        bugReports: {}
+        bugReports: {},
+        bugReportCache: {}
       });
 
       this.settings = defaultSettings;
