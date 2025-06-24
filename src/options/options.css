@@ -83,7 +83,6 @@ body {
 }
 
 .setting-item label {
-  display: block;
   font-weight: 500;
   color: #333;
   margin-bottom: 8px;
@@ -118,6 +117,14 @@ body {
   cursor: pointer;
   font-weight: 500;
   color: #333;
+}
+
+.setting-label .label-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .setting-label input[type="checkbox"] {
