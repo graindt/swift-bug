@@ -305,13 +305,11 @@ class BugReporterBackground {
   }
 
   async injectBugData(bugData, tabId) {
-    console.log('injectBugData: starting restoration for tab', tabId, bugData);
     // Use the original report URL origin for setting cookies
     const reportOrigin = new URL(bugData.url).origin;
      // Restore cookies
      if (bugData.cookies && bugData.cookies.length > 0) {
        for (const cookie of bugData.cookies) {
-         console.log('injectBugData: setting cookie', cookie);
          try {
           // Construct URL using report origin and cookie path
           const url = `${reportOrigin}${cookie.path}`;
@@ -325,12 +323,10 @@ class BugReporterBackground {
              httpOnly: cookie.httpOnly,
              expirationDate: cookie.expirationDate
            });
-          console.log('injectBugData: cookie set successfully for', cookie.name);
          } catch (error) {
            console.error('Error setting cookie:', error);
          }
        }
-      console.log('injectBugData: all cookies restored for tab', tabId);
      }
 
      // Inject storage data
