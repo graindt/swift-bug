@@ -1,116 +1,91 @@
+// Immediately start capturing console logs before anything else
+const originalConsole = {
+  log: console.log,
+  error: console.error,
+  warn: console.warn,
+  info: console.info,
+  debug: console.debug
+};
+
+// Global storage for captured logs
+window.bugReporterCapturedLogs = [];
+const maxLogEntries = 100;
+
+// Inject page context console interceptor to forward page logs via postMessage
+// Inject page console interceptor script under CSP
+(function injectConsoleInterceptor() {
+  const script = document.createElement('script');
+  script.src = chrome.runtime.getURL('content/consoleInterceptor.js');
+  script.onload = () => script.remove();
+  document.documentElement.appendChild(script);
+})();
+
+// Listen for forwarded page logs
+window.bugReporterCapturedLogs = [];
+window.addEventListener('message', event => {
+  if (event.source === window && event.data && event.data.source === 'bug-reporter') {
+    window.bugReporterCapturedLogs.push(event.data.logEntry);
+    if (window.bugReporterCapturedLogs.length > maxLogEntries) {
+      window.bugReporterCapturedLogs = window.bugReporterCapturedLogs.slice(-maxLogEntries);
+    }
+  }
+});
+
 // Content script for Chrome Bug Reporter
 class BugReporterContent {
   constructor() {
-    this.consoleLog = [];
+    this.consoleLog = window.bugReporterCapturedLogs || [];
     this.maxLogEntries = 100;
-    this.setupConsoleCapture();
+    this.setupErrorCapture();
     this.setupMessageListener();
   }
 
-  setupConsoleCapture() {
-    // Store original console methods
-    const originalConsole = {
-      log: console.log,
-      error: console.error,
-      warn: console.warn,
-      info: console.info,
-      debug: console.debug
-    };
-
-    // Override console methods to capture logs
-    const captureLog = (level, originalMethod) => {
-      return (...args) => {
-        // Call original method first
-        originalMethod.apply(console, args);
-
-        // Capture the log entry
-        const logEntry = {
-          level: level,
-          timestamp: new Date().toISOString(),
-          message: args.map(arg => {
-            if (typeof arg === 'object') {
-              try {
-                return JSON.stringify(arg, null, 2);
-              } catch (e) {
-                return arg.toString();
-              }
-            }
-            return String(arg);
-          }).join(' ')
-        };
-
-        this.addLogEntry(logEntry);
-      };
-    };
-
-    // Replace console methods
-    console.log = captureLog('log', originalConsole.log);
-    console.error = captureLog('error', originalConsole.error);
-    console.warn = captureLog('warn', originalConsole.warn);
-    console.info = captureLog('info', originalConsole.info);
-    console.debug = captureLog('debug', originalConsole.debug);
-
+  setupErrorCapture() {
     // Capture unhandled errors
     window.addEventListener('error', (event) => {
-      this.addLogEntry({
+      const logEntry = {
         level: 'error',
         timestamp: new Date().toISOString(),
         message: `Uncaught Error: ${event.message} at ${event.filename}:${event.lineno}:${event.colno}`
-      });
+      };
+
+      window.bugReporterCapturedLogs.push(logEntry);
+
+      // Keep only the last N entries
+      if (window.bugReporterCapturedLogs.length > maxLogEntries) {
+        window.bugReporterCapturedLogs = window.bugReporterCapturedLogs.slice(-maxLogEntries);
+      }
+
+      // Update local reference
+      this.consoleLog = window.bugReporterCapturedLogs;
     });
 
     // Capture unhandled promise rejections
     window.addEventListener('unhandledrejection', (event) => {
-      this.addLogEntry({
+      const logEntry = {
         level: 'error',
         timestamp: new Date().toISOString(),
         message: `Unhandled Promise Rejection: ${event.reason}`
-      });
+      };
+
+      window.bugReporterCapturedLogs.push(logEntry);
+
+      // Keep only the last N entries
+      if (window.bugReporterCapturedLogs.length > maxLogEntries) {
+        window.bugReporterCapturedLogs = window.bugReporterCapturedLogs.slice(-maxLogEntries);
+      }
+
+      // Update local reference
+      this.consoleLog = window.bugReporterCapturedLogs;
     });
-  }
-
-  addLogEntry(logEntry) {
-    // Filter out logs from this extension
-    if (this.isExtensionLog(logEntry.message)) {
-      return;
-    }
-
-    this.consoleLog.push(logEntry);
-
-    // Keep only the last N entries
-    if (this.consoleLog.length > this.maxLogEntries) {
-      this.consoleLog = this.consoleLog.slice(-this.maxLogEntries);
-    }
-
-    // Store in window for background script access
-    window.bugReporterLogs = this.consoleLog;
-  }
-
-  isExtensionLog(message) {
-    // Filter patterns for extension-related logs
-    const extensionPatterns = [
-      'Bug Reporter',
-      'BugReporter',
-      'bugReporter',
-      'Chrome Bug Reporter',
-      'Content Script Loaded',
-      'Error accessing localStorage',
-      'Error accessing sessionStorage',
-      'Error clearing storage',
-      'Error setting localStorage item',
-      'Error setting sessionStorage item',
-      'Storage data restored'
-    ];
-
-    return extensionPatterns.some(pattern =>
-      message.toLowerCase().includes(pattern.toLowerCase())
-    );
   }
 
   setupMessageListener() {
     // Listen for messages from background script
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (message.action === 'getConsoleLog') {
+        // Always use the latest captured logs from global storage
+        this.consoleLog = window.bugReporterCapturedLogs || [];
         sendResponse({ consoleLog: this.consoleLog });
       }
       return true;
@@ -217,4 +192,4 @@ window.bugReporterContent = bugReporterContent;
 window.bugReporterContentLoaded = true;
 
 // Debug log
-console.log('Bug Reporter Content Script Loaded', bugReporterContent.getPageState());
+console.log('BugReporter: Content Script Loaded', bugReporterContent.getPageState());

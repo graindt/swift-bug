@@ -23,6 +23,12 @@
       "run_at": "document_start"
     }
   ],
+  "web_accessible_resources": [
+    {
+      "resources": ["content/consoleInterceptor.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "action": {
     "default_popup": "popup/popup.html",
     "default_title": "Bug Reporter",
