@@ -80,8 +80,11 @@ class BugReporterBackground {
         settings: {
           maxStoredReports: 50,
           includeScreenshot: true,
-          includeNetworkRequests: false,
-          maxConsoleLines: 100
+          includeNetworkRequests: true,
+          maxConsoleLines: 100,
+          maxNetworkRequests: 50,
+          maxRequestBodySize: 10240,
+          ignoreStaticResources: true
         }
       });
     }
@@ -148,6 +151,16 @@ class BugReporterBackground {
         pageData.consoleLog = [];
       }
 
+      // Get network requests from content script
+      const networkData = await chrome.tabs.sendMessage(tab.id, { action: 'getNetworkRequests' });
+      if (networkData && networkData.networkRequests) {
+        pageData.networkRequests = networkData.networkRequests;
+        console.log(`BugReporter: Collected ${networkData.networkRequests.length} network requests`);
+      } else {
+        pageData.networkRequests = [];
+        console.log('BugReporter: No network requests found');
+      }
+
       // Inject script to collect storage data (localStorage/sessionStorage)
       const results = await chrome.scripting.executeScript({
         target: { tabId: tab.id },
@@ -189,6 +202,7 @@ class BugReporterBackground {
       pageData.localStorage = {};
       pageData.sessionStorage = {};
       pageData.consoleLog = [];
+      pageData.networkRequests = [];
     }
 
     // Take screenshot

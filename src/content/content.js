@@ -20,13 +20,35 @@ const maxLogEntries = 100;
   document.documentElement.appendChild(script);
 })();
 
-// Listen for forwarded page logs
+// Inject network interceptor script
+(function injectNetworkInterceptor() {
+  const script = document.createElement('script');
+  script.src = chrome.runtime.getURL('content/networkInterceptor.js');
+  script.onload = () => script.remove();
+  document.documentElement.appendChild(script);
+})();
+
+// Listen for forwarded page logs and network requests
 window.bugReporterCapturedLogs = [];
+window.bugReporterNetworkRequests = [];
+const maxNetworkRequests = 50;
+
 window.addEventListener('message', event => {
-  if (event.source === window && event.data && event.data.source === 'bug-reporter') {
-    window.bugReporterCapturedLogs.push(event.data.logEntry);
-    if (window.bugReporterCapturedLogs.length > maxLogEntries) {
-      window.bugReporterCapturedLogs = window.bugReporterCapturedLogs.slice(-maxLogEntries);
+  if (event.source === window && event.data) {
+    // Handle console logs
+    if (event.data.source === 'bug-reporter') {
+      window.bugReporterCapturedLogs.push(event.data.logEntry);
+      if (window.bugReporterCapturedLogs.length > maxLogEntries) {
+        window.bugReporterCapturedLogs = window.bugReporterCapturedLogs.slice(-maxLogEntries);
+      }
+    }
+
+    // Handle network requests
+    if (event.data.source === 'bug-reporter-network') {
+      window.bugReporterNetworkRequests.push(event.data.networkRequest);
+      if (window.bugReporterNetworkRequests.length > maxNetworkRequests) {
+        window.bugReporterNetworkRequests = window.bugReporterNetworkRequests.slice(-maxNetworkRequests);
+      }
     }
   }
 });
@@ -87,6 +109,10 @@ class BugReporterContent {
         // Always use the latest captured logs from global storage
         this.consoleLog = window.bugReporterCapturedLogs || [];
         sendResponse({ consoleLog: this.consoleLog });
+      } else if (message.action === 'getNetworkRequests') {
+        // Return network requests from global storage
+        const networkRequests = window.bugReporterNetworkRequests || [];
+        sendResponse({ networkRequests: networkRequests });
       }
       return true;
     });

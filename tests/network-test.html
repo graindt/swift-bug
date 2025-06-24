@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Request Test - Bug Reporter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #f9f9f9;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .output {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .instructions {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐛 Network Request Test Page</h1>
+
+        <div class="instructions">
+            <strong>Instructions:</strong>
+            <ol>
+                <li>Make sure the Bug Reporter extension is installed</li>
+                <li>Click the buttons below to generate different types of network requests</li>
+                <li>Open the Bug Reporter popup and save a bug report</li>
+                <li>Check if the network requests are captured in the exported data</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h3>JSON API Request (XMLHttpRequest)</h3>
+            <button onclick="makeXHRRequest()">Make XHR GET Request</button>
+            <button onclick="makeXHRPostRequest()">Make XHR POST Request</button>
+            <div id="xhr-output" class="output"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Fetch API Requests</h3>
+            <button onclick="makeFetchRequest()">Make Fetch GET Request</button>
+            <button onclick="makeFetchPostRequest()">Make Fetch POST Request</button>
+            <div id="fetch-output" class="output"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Error Requests</h3>
+            <button onclick="makeErrorRequest()">Make 404 Request</button>
+            <button onclick="makeNetworkErrorRequest()">Make Network Error Request</button>
+            <div id="error-output" class="output"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Console Logging</h3>
+            <button onclick="logToConsole()">Log to Console</button>
+            <button onclick="logError()">Log Error</button>
+            <div id="console-output" class="output"></div>
+        </div>
+    </div>
+
+    <script>
+        // XHR Requests
+        function makeXHRRequest() {
+            const output = document.getElementById('xhr-output');
+            output.textContent = 'Making XHR GET request...';
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'https://jsonplaceholder.typicode.com/posts/1');
+            xhr.setRequestHeader('X-Custom-Header', 'test-value');
+            xhr.onload = function() {
+                output.textContent = `XHR Response: ${xhr.status} ${xhr.statusText}\n${xhr.responseText.substring(0, 200)}...`;
+            };
+            xhr.onerror = function() {
+                output.textContent = 'XHR Error occurred';
+            };
+            xhr.send();
+        }
+
+        function makeXHRPostRequest() {
+            const output = document.getElementById('xhr-output');
+            output.textContent = 'Making XHR POST request...';
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'https://jsonplaceholder.typicode.com/posts');
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onload = function() {
+                output.textContent = `XHR POST Response: ${xhr.status} ${xhr.statusText}\n${xhr.responseText.substring(0, 200)}...`;
+            };
+            xhr.onerror = function() {
+                output.textContent = 'XHR POST Error occurred';
+            };
+            xhr.send(JSON.stringify({
+                title: 'Test Post',
+                body: 'This is a test post from Bug Reporter',
+                userId: 1
+            }));
+        }
+
+        // Fetch Requests
+        async function makeFetchRequest() {
+            const output = document.getElementById('fetch-output');
+            output.textContent = 'Making Fetch GET request...';
+
+            try {
+                const response = await fetch('https://jsonplaceholder.typicode.com/posts/2', {
+                    headers: {
+                        'X-Test-Header': 'fetch-test'
+                    }
+                });
+                const data = await response.json();
+                output.textContent = `Fetch Response: ${response.status} ${response.statusText}\n${JSON.stringify(data, null, 2).substring(0, 200)}...`;
+            } catch (error) {
+                output.textContent = `Fetch Error: ${error.message}`;
+            }
+        }
+
+        async function makeFetchPostRequest() {
+            const output = document.getElementById('fetch-output');
+            output.textContent = 'Making Fetch POST request...';
+
+            try {
+                const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: 'Fetch Test Post',
+                        body: 'This is a test post using fetch API',
+                        userId: 2
+                    })
+                });
+                const data = await response.json();
+                output.textContent = `Fetch POST Response: ${response.status} ${response.statusText}\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                output.textContent = `Fetch POST Error: ${error.message}`;
+            }
+        }
+
+        // Error Requests
+        async function makeErrorRequest() {
+            const output = document.getElementById('error-output');
+            output.textContent = 'Making 404 request...';
+
+            try {
+                const response = await fetch('https://jsonplaceholder.typicode.com/posts/999999');
+                output.textContent = `404 Response: ${response.status} ${response.statusText}`;
+            } catch (error) {
+                output.textContent = `404 Error: ${error.message}`;
+            }
+        }
+
+        async function makeNetworkErrorRequest() {
+            const output = document.getElementById('error-output');
+            output.textContent = 'Making network error request...';
+
+            try {
+                const response = await fetch('https://non-existent-domain-12345.com/api/test');
+                output.textContent = `Network Response: ${response.status} ${response.statusText}`;
+            } catch (error) {
+                output.textContent = `Network Error: ${error.message}`;
+            }
+        }
+
+        // Console Logging
+        function logToConsole() {
+            const output = document.getElementById('console-output');
+            console.log('Test log message from Bug Reporter test page');
+            console.info('Test info message');
+            console.warn('Test warning message');
+            output.textContent = 'Check console for log messages';
+        }
+
+        function logError() {
+            const output = document.getElementById('console-output');
+            console.error('Test error message from Bug Reporter test page');
+            output.textContent = 'Check console for error message';
+        }
+
+        // Initial page load
+        console.log('Bug Reporter Network Test Page loaded');
+        console.log('Page timestamp:', new Date().toISOString());
+    </script>
+</body>
+</html>
