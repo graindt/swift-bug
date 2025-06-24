@@ -74,15 +74,7 @@ class BugReporterContent {
         message: `Uncaught Error: ${event.message} at ${event.filename}:${event.lineno}:${event.colno}`
       };
 
-      window.bugReporterCapturedLogs.push(logEntry);
-
-      // Keep only the last N entries
-      if (window.bugReporterCapturedLogs.length > maxLogEntries) {
-        window.bugReporterCapturedLogs = window.bugReporterCapturedLogs.slice(-maxLogEntries);
-      }
-
-      // Update local reference
-      this.consoleLog = window.bugReporterCapturedLogs;
+      addLogEntry(logEntry);
     });
 
     // Capture unhandled promise rejections
@@ -93,16 +85,46 @@ class BugReporterContent {
         message: `Unhandled Promise Rejection: ${event.reason}`
       };
 
-      window.bugReporterCapturedLogs.push(logEntry);
-
-      // Keep only the last N entries
-      if (window.bugReporterCapturedLogs.length > maxLogEntries) {
-        window.bugReporterCapturedLogs = window.bugReporterCapturedLogs.slice(-maxLogEntries);
-      }
-
-      // Update local reference
-      this.consoleLog = window.bugReporterCapturedLogs;
+      addLogEntry(logEntry);
     });
+  }
+
+  addLogEntry(logEntry) {
+    // Filter out logs from this extension
+    if (this.isExtensionLog(logEntry.message)) {
+      return;
+    }
+
+    window.bugReporterCapturedLogs.push(logEntry);
+
+    // Keep only the last N entries
+    if (window.bugReporterCapturedLogs.length > maxLogEntries) {
+      window.bugReporterCapturedLogs = window.bugReporterCapturedLogs.slice(-maxLogEntries);
+    }
+
+    // Update local reference
+    this.consoleLog = window.bugReporterCapturedLogs;
+  }
+
+  isExtensionLog(message) {
+    // Filter patterns for extension-related logs
+    const extensionPatterns = [
+      'Bug Reporter',
+      'BugReporter',
+      'bugReporter',
+      'Chrome Bug Reporter',
+      'Content Script Loaded',
+      'Error accessing localStorage',
+      'Error accessing sessionStorage',
+      'Error clearing storage',
+      'Error setting localStorage item',
+      'Error setting sessionStorage item',
+      'Storage data restored'
+    ];
+
+    return extensionPatterns.some(pattern =>
+      message.toLowerCase().includes(pattern.toLowerCase())
+    );
   }
 
   setupMessageListener() {
