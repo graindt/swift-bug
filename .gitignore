@@ -1,0 +1,39 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# VSCode
+.vscode/
+
+# Logs
+logs/
+*.log
+
+# Chrome Extension Build
+build/
+dist/
+
+# System Files
+Thumbs.db
+Desktop.ini
+
+# Misc
+*.swp
+*.swo
+
+# Python (if any)
+__pycache__/
+*.pyc
+
+# Test output
+coverage/
+
+# Ignore exported bug reports
+swiftbug-reports-all-*.json

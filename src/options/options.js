@@ -273,24 +273,20 @@ class BugReporterOptions {
       clearBtn.innerHTML = '<span class="btn-icon">⏳</span>清除中...';
       clearBtn.disabled = true;
 
+      // Save current settings before clearing
+      const currentSettings = { ...this.settings };
+
       // Clear all storage
       await chrome.storage.local.clear();
 
-      // Reset to default settings
-      const defaultSettings = {
-        maxStoredReports: 50,
-        includeScreenshot: true,
-        includeNetworkRequests: false,
-        maxConsoleLines: 100
-      };
-
+      // Restore current settings only
       await chrome.storage.local.set({
-        settings: defaultSettings,
+        settings: currentSettings,
         bugReports: {},
         bugReportCache: {}
       });
 
-      this.settings = defaultSettings;
+      this.settings = currentSettings;
       this.updateUI();
       this.updateStorageInfo();
       this.showSuccess('所有数据已清除');
