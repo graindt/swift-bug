@@ -7,13 +7,28 @@
     info: console.info,
     debug: console.debug
   };
+
+  // safe stringify to handle circular references without errors
+  function safeStringify(obj) {
+    const seen = new WeakSet();
+    return JSON.stringify(obj, (key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (seen.has(value)) {
+          return '[Circular]';
+        }
+        seen.add(value);
+      }
+      return value;
+    }, 2);
+  }
+
   function capture(level, original) {
     return function(...args) {
       original.apply(console, args);
       const entry = {
         level: level,
         timestamp: new Date().toISOString(),
-        message: args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ')
+        message: args.map(a => typeof a === 'object' ? safeStringify(a) : String(a)).join(' ')
       };
       window.postMessage({ source: 'swiftbug-reporter', logEntry: entry }, '*');
     };
