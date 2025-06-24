@@ -99,11 +99,47 @@ class BugReporterBackground {
       userAgent: navigator.userAgent
     };
 
-    // Collect cookies
+    // Get the complete URL including hash from the page
     try {
-      const url = new URL(tab.url);
-      const cookies = await chrome.cookies.getAll({ domain: url.hostname });
-      pageData.cookies = cookies;
+      const results = await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => window.location.href
+      });
+
+      if (results && results[0] && results[0].result) {
+        pageData.url = results[0].result; // This includes the hash
+      }
+    } catch (error) {
+      console.error('Error getting complete URL with hash:', error);
+      // Fall back to tab.url if injection fails
+    }
+
+    // Collect ALL cookies for the current page
+    try {
+      const url = new URL(pageData.url);
+
+      // Get cookies for the exact URL
+      const exactUrlCookies = await chrome.cookies.getAll({ url: pageData.url });
+
+      // Get cookies for the domain and its subdomains
+      const domainCookies = await chrome.cookies.getAll({ domain: url.hostname });
+
+      // Get cookies for the domain without subdomain (if it's a subdomain)
+      let parentDomainCookies = [];
+      const hostParts = url.hostname.split('.');
+      if (hostParts.length > 2) {
+        const parentDomain = hostParts.slice(-2).join('.');
+        parentDomainCookies = await chrome.cookies.getAll({ domain: parentDomain });
+      }
+
+      // Combine and deduplicate cookies
+      const allCookies = [...exactUrlCookies, ...domainCookies, ...parentDomainCookies];
+      const uniqueCookies = allCookies.filter((cookie, index, self) =>
+        index === self.findIndex(c => c.name === cookie.name && c.domain === cookie.domain && c.path === cookie.path)
+      );
+
+      pageData.cookies = uniqueCookies;
+      console.log(`Collected ${uniqueCookies.length} cookies for ${url.hostname}`);
     } catch (error) {
       console.error('Error collecting cookies:', error);
       pageData.cookies = [];
@@ -113,7 +149,40 @@ class BugReporterBackground {
     try {
       const results = await chrome.scripting.executeScript({
         target: { tabId: tab.id },
-        func: this.collectStorageData
+        func: () => {
+          const data = {
+            localStorage: {},
+            sessionStorage: {},
+            consoleLog: []
+          };
+
+          // Collect localStorage
+          try {
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              data.localStorage[key] = localStorage.getItem(key);
+            }
+          } catch (error) {
+            console.error('Error accessing localStorage:', error);
+          }
+
+          // Collect sessionStorage
+          try {
+            for (let i = 0; i < sessionStorage.length; i++) {
+              const key = sessionStorage.key(i);
+              data.sessionStorage[key] = sessionStorage.getItem(key);
+            }
+          } catch (error) {
+            console.error('Error accessing sessionStorage:', error);
+          }
+
+          // Get console logs if they were captured by content script
+          if (window.bugReporterLogs) {
+            data.consoleLog = window.bugReporterLogs.slice(-100); // Last 100 logs
+          }
+
+          return data;
+        }
       });
 
       if (results && results[0] && results[0].result) {
@@ -138,41 +207,6 @@ class BugReporterBackground {
     return pageData;
   }
 
-  // Function to be injected into page to collect storage data
-  collectStorageData() {
-    const data = {
-      localStorage: {},
-      sessionStorage: {},
-      consoleLog: []
-    };
-
-    // Collect localStorage
-    try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        data.localStorage[key] = localStorage.getItem(key);
-      }
-    } catch (error) {
-      console.error('Error accessing localStorage:', error);
-    }
-
-    // Collect sessionStorage
-    try {
-      for (let i = 0; i < sessionStorage.length; i++) {
-        const key = sessionStorage.key(i);
-        data.sessionStorage[key] = sessionStorage.getItem(key);
-      }
-    } catch (error) {
-      console.error('Error accessing sessionStorage:', error);
-    }
-
-    // Get console logs if they were captured by content script
-    if (window.bugReporterLogs) {
-      data.consoleLog = window.bugReporterLogs.slice(-100); // Last 100 logs
-    }
-
-    return data;
-  }
 
   async saveBugReport(reportData) {
     const reportId = `bug_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -308,7 +342,25 @@ class BugReporterBackground {
     try {
       await chrome.scripting.executeScript({
         target: { tabId },
-        func: this.injectStorageData,
+        func: (localStorageData, sessionStorageData) => {
+          // Restore localStorage
+          Object.entries(localStorageData).forEach(([key, value]) => {
+            try {
+              localStorage.setItem(key, value);
+            } catch (error) {
+              console.error('Error setting localStorage item:', error);
+            }
+          });
+
+          // Restore sessionStorage
+          Object.entries(sessionStorageData).forEach(([key, value]) => {
+            try {
+              sessionStorage.setItem(key, value);
+            } catch (error) {
+              console.error('Error setting sessionStorage item:', error);
+            }
+          });
+        },
         args: [bugData.localStorage || {}, bugData.sessionStorage || {}]
       });
     } catch (error) {
@@ -319,26 +371,6 @@ class BugReporterBackground {
     await chrome.tabs.reload(tabId);
   }
 
-  // Function to be injected to restore storage data
-  injectStorageData(localStorageData, sessionStorageData) {
-    // Restore localStorage
-    Object.entries(localStorageData).forEach(([key, value]) => {
-      try {
-        localStorage.setItem(key, value);
-      } catch (error) {
-        console.error('Error setting localStorage item:', error);
-      }
-    });
-
-    // Restore sessionStorage
-    Object.entries(sessionStorageData).forEach(([key, value]) => {
-      try {
-        sessionStorage.setItem(key, value);
-      } catch (error) {
-        console.error('Error setting sessionStorage item:', error);
-      }
-    });
-  }
 }
 
 // Initialize background script
