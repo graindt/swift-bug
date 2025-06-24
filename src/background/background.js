@@ -121,19 +121,11 @@ class BugReporterBackground {
       // Get cookies for the exact URL
       const exactUrlCookies = await chrome.cookies.getAll({ url: pageData.url });
 
-      // Get cookies for the domain and its subdomains
+      // Get cookies for the domain and its subdomains (current domain only)
       const domainCookies = await chrome.cookies.getAll({ domain: url.hostname });
 
-      // Get cookies for the domain without subdomain (if it's a subdomain)
-      let parentDomainCookies = [];
-      const hostParts = url.hostname.split('.');
-      if (hostParts.length > 2) {
-        const parentDomain = hostParts.slice(-2).join('.');
-        parentDomainCookies = await chrome.cookies.getAll({ domain: parentDomain });
-      }
-
-      // Combine and deduplicate cookies
-      const allCookies = [...exactUrlCookies, ...domainCookies, ...parentDomainCookies];
+      // Combine and deduplicate cookies (no parent domain fetch)
+      const allCookies = [...exactUrlCookies, ...domainCookies];
       const uniqueCookies = allCookies.filter((cookie, index, self) =>
         index === self.findIndex(c => c.name === cookie.name && c.domain === cookie.domain && c.path === cookie.path)
       );
