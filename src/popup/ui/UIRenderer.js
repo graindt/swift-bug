@@ -148,6 +148,38 @@ export class UIRenderer {
       </div>
     `;
 
+    html = html.trim();
+
+    // Viewport Section
+    if (report.viewport) {
+      html += `
+        <div class="bug-section">
+          <div class="bug-section-title">
+            <span class="bug-section-icon">📐</span>
+            视口信息
+          </div>
+          <div class="bug-info-grid">
+            <div class="bug-info-item">
+              <div class="bug-info-label">宽度</div>
+              <div class="bug-info-value">${report.viewport.width}px</div>
+            </div>
+            <div class="bug-info-item">
+              <div class="bug-info-label">高度</div>
+              <div class="bug-info-value">${report.viewport.height}px</div>
+            </div>
+            <div class="bug-info-item">
+              <div class="bug-info-label">水平滚动</div>
+              <div class="bug-info-value">${report.viewport.scrollX}px</div>
+            </div>
+            <div class="bug-info-item">
+              <div class="bug-info-label">垂直滚动</div>
+              <div class="bug-info-value">${report.viewport.scrollY}px</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     // Screenshot Section
     if (report.screenshot) {
       html += `

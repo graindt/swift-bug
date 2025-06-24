@@ -250,6 +250,25 @@ class BugReporterBackground {
       pageData.networkRequests = [];
     }
 
+    // Collect viewport info
+    try {
+      const results = await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => ({
+          width: window.innerWidth,
+          height: window.innerHeight,
+          scrollX: window.scrollX,
+          scrollY: window.scrollY
+        })
+      });
+      if (results && results[0] && results[0].result) {
+        pageData.viewport = results[0].result;
+      }
+    } catch (error) {
+      console.error('BugReporter: Error collecting viewport info:', error);
+      pageData.viewport = {};
+    }
+
     // Take screenshot
     if (settings.includeScreenshot) {
       try {
