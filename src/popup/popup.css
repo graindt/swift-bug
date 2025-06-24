@@ -354,3 +354,344 @@ body {
 .loading {
   animation: pulse 1.5s ease-in-out infinite;
 }
+
+/* Bug Detail Modal */
+.bug-detail-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.bug-detail-content {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideInUp 0.3s ease;
+}
+
+.bug-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e1e5e9;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.bug-detail-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.bug-detail-body {
+  padding: 0;
+  max-height: calc(90vh - 80px);
+  overflow-y: auto;
+}
+
+/* Bug Detail Sections */
+.bug-section {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 20px 24px;
+}
+
+.bug-section:last-child {
+  border-bottom: none;
+}
+
+.bug-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bug-section-icon {
+  font-size: 18px;
+}
+
+.bug-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.bug-info-item {
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.bug-info-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.bug-info-value {
+  font-size: 14px;
+  color: #333;
+  word-break: break-word;
+}
+
+.bug-url {
+  background: #e3f2fd;
+  border: 1px solid #bbdefb;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.bug-url-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #1565c0;
+  margin-bottom: 4px;
+}
+
+.bug-url-value {
+  font-size: 13px;
+  color: #1976d2;
+  word-break: break-all;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.bug-screenshot {
+  text-align: center;
+  margin: 16px 0;
+}
+
+.bug-screenshot img {
+  max-width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.bug-screenshot img:hover {
+  transform: scale(1.02);
+}
+
+.storage-section {
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.storage-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.storage-count {
+  font-size: 12px;
+  background: #6c757d;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.storage-items {
+  max-height: 200px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}
+
+.storage-item {
+  padding: 8px 12px;
+  border-bottom: 1px solid #f1f3f4;
+  display: flex;
+  gap: 12px;
+}
+
+.storage-item:last-child {
+  border-bottom: none;
+}
+
+.storage-key {
+  font-weight: 500;
+  color: #495057;
+  min-width: 120px;
+  font-size: 12px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.storage-value {
+  color: #6c757d;
+  font-size: 12px;
+  word-break: break-word;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  flex: 1;
+}
+
+.console-logs {
+  background: #2d3748;
+  border-radius: 6px;
+  padding: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+}
+
+.console-log-item {
+  padding: 4px 0;
+  border-bottom: 1px solid #4a5568;
+  color: #e2e8f0;
+}
+
+.console-log-item:last-child {
+  border-bottom: none;
+}
+
+.console-log-level {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 500;
+  margin-right: 8px;
+  text-transform: uppercase;
+}
+
+.console-log-level.info {
+  background: #3182ce;
+  color: white;
+}
+
+.console-log-level.warn {
+  background: #d69e2e;
+  color: white;
+}
+
+.console-log-level.error {
+  background: #e53e3e;
+  color: white;
+}
+
+.console-log-level.log {
+  background: #4a5568;
+  color: white;
+}
+
+.empty-data {
+  text-align: center;
+  padding: 20px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom scrollbar for bug detail modal */
+.bug-detail-body::-webkit-scrollbar,
+.storage-items::-webkit-scrollbar,
+.console-logs::-webkit-scrollbar {
+  width: 6px;
+}
+
+.bug-detail-body::-webkit-scrollbar-track,
+.storage-items::-webkit-scrollbar-track,
+.console-logs::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.bug-detail-body::-webkit-scrollbar-thumb,
+.storage-items::-webkit-scrollbar-thumb,
+.console-logs::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.bug-detail-body::-webkit-scrollbar-thumb:hover,
+.storage-items::-webkit-scrollbar-thumb:hover,
+.console-logs::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Responsive adjustments for bug detail modal */
+@media (max-width: 480px) {
+  .bug-detail-content {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .bug-info-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .bug-section {
+    padding: 16px 20px;
+  }
+}

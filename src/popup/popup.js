@@ -38,6 +38,18 @@ class BugReporterPopup {
     document.getElementById('fileInput').addEventListener('change', (event) => {
       this.handleFileImport(event);
     });
+
+    // Bug detail modal close button
+    document.getElementById('closeBugDetail').addEventListener('click', () => {
+      this.closeBugDetailModal();
+    });
+
+    // Close modal when clicking outside
+    document.getElementById('bugDetailModal').addEventListener('click', (event) => {
+      if (event.target === document.getElementById('bugDetailModal')) {
+        this.closeBugDetailModal();
+      }
+    });
   }
 
   updateCurrentPageInfo() {
@@ -211,11 +223,221 @@ class BugReporterPopup {
       return;
     }
 
-    // Display full report data in new tab as JSON
-    const dataStr = JSON.stringify(report, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
+    // Show the bug detail modal
+    this.showBugDetailModal(report);
+  }
+
+  showBugDetailModal(report) {
+    const modal = document.getElementById('bugDetailModal');
+    const body = document.getElementById('bugDetailBody');
+
+    // Generate the bug detail HTML
+    body.innerHTML = this.generateBugDetailHTML(report);
+
+    // Show the modal
+    modal.style.display = 'flex';
+
+    // Add escape key listener
+    document.addEventListener('keydown', this.handleEscapeKey.bind(this));
+  }
+
+  closeBugDetailModal() {
+    const modal = document.getElementById('bugDetailModal');
+    modal.style.display = 'none';
+
+    // Remove escape key listener
+    document.removeEventListener('keydown', this.handleEscapeKey.bind(this));
+  }
+
+  handleEscapeKey(event) {
+    if (event.key === 'Escape') {
+      this.closeBugDetailModal();
+    }
+  }
+
+  generateBugDetailHTML(report) {
+    const date = new Date(report.timestamp);
+    const formattedDate = date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+
+    let domain = 'Unknown';
+    try {
+      domain = new URL(report.url).hostname;
+    } catch (error) {
+      domain = report.url;
+    }
+
+    let html = `
+      <!-- Basic Info Section -->
+      <div class="bug-section">
+        <div class="bug-section-title">
+          <span class="bug-section-icon">📋</span>
+          基本信息
+        </div>
+
+        <div class="bug-url">
+          <div class="bug-url-label">页面地址</div>
+          <div class="bug-url-value">${this.escapeHtml(report.url)}</div>
+        </div>
+
+        <div class="bug-info-grid">
+          <div class="bug-info-item">
+            <div class="bug-info-label">页面标题</div>
+            <div class="bug-info-value">${this.escapeHtml(report.title || 'N/A')}</div>
+          </div>
+          <div class="bug-info-item">
+            <div class="bug-info-label">捕获时间</div>
+            <div class="bug-info-value">${formattedDate}</div>
+          </div>
+          <div class="bug-info-item">
+            <div class="bug-info-label">域名</div>
+            <div class="bug-info-value">${this.escapeHtml(domain)}</div>
+          </div>
+          <div class="bug-info-item">
+            <div class="bug-info-label">用户代理</div>
+            <div class="bug-info-value" title="${this.escapeHtml(report.userAgent || 'N/A')}">${this.truncateText(report.userAgent || 'N/A', 50)}</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Screenshot Section
+    if (report.screenshot) {
+      html += `
+        <div class="bug-section">
+          <div class="bug-section-title">
+            <span class="bug-section-icon">📸</span>
+            页面截图
+          </div>
+          <div class="bug-screenshot">
+            <img src="${report.screenshot}" alt="页面截图" onclick="window.open('${report.screenshot}', '_blank')">
+          </div>
+        </div>
+      `;
+    }
+
+    // Storage Section
+    const hasLocalStorage = report.localStorage && Object.keys(report.localStorage).length > 0;
+    const hasSessionStorage = report.sessionStorage && Object.keys(report.sessionStorage).length > 0;
+
+    if (hasLocalStorage || hasSessionStorage) {
+      html += `
+        <div class="bug-section">
+          <div class="bug-section-title">
+            <span class="bug-section-icon">💾</span>
+            浏览器存储
+          </div>
+      `;
+
+      if (hasLocalStorage) {
+        html += `
+          <div class="storage-section">
+            <div class="storage-title">
+              📦 LocalStorage
+              <span class="storage-count">${Object.keys(report.localStorage).length}</span>
+            </div>
+            <div class="storage-items">
+              ${Object.entries(report.localStorage).map(([key, value]) => `
+                <div class="storage-item">
+                  <div class="storage-key">${this.escapeHtml(key)}</div>
+                  <div class="storage-value">${this.escapeHtml(this.truncateText(value, 200))}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      if (hasSessionStorage) {
+        html += `
+          <div class="storage-section">
+            <div class="storage-title">
+              🔒 SessionStorage
+              <span class="storage-count">${Object.keys(report.sessionStorage).length}</span>
+            </div>
+            <div class="storage-items">
+              ${Object.entries(report.sessionStorage).map(([key, value]) => `
+                <div class="storage-item">
+                  <div class="storage-key">${this.escapeHtml(key)}</div>
+                  <div class="storage-value">${this.escapeHtml(this.truncateText(value, 200))}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      html += '</div>';
+    }
+
+    // Cookies Section
+    if (report.cookies && report.cookies.length > 0) {
+      html += `
+        <div class="bug-section">
+          <div class="bug-section-title">
+            <span class="bug-section-icon">🍪</span>
+            Cookies
+            <span class="storage-count">${report.cookies.length}</span>
+          </div>
+          <div class="storage-items">
+            ${report.cookies.map(cookie => `
+              <div class="storage-item">
+                <div class="storage-key">${this.escapeHtml(cookie.name)}</div>
+                <div class="storage-value" title="Domain: ${this.escapeHtml(cookie.domain)}, Path: ${this.escapeHtml(cookie.path)}">${this.escapeHtml(this.truncateText(cookie.value, 100))}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // Console Logs Section
+    if (report.consoleLog && report.consoleLog.length > 0) {
+      html += `
+        <div class="bug-section">
+          <div class="bug-section-title">
+            <span class="bug-section-icon">🖥️</span>
+            控制台日志
+            <span class="storage-count">${report.consoleLog.length}</span>
+          </div>
+          <div class="console-logs">
+            ${report.consoleLog.map(log => `
+              <div class="console-log-item">
+                <span class="console-log-level ${log.level || 'log'}">${log.level || 'log'}</span>
+                ${this.escapeHtml(log.message || log.toString())}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // If no data sections were added, show empty state
+    if (!report.screenshot && !hasLocalStorage && !hasSessionStorage &&
+        (!report.cookies || report.cookies.length === 0) &&
+        (!report.consoleLog || report.consoleLog.length === 0)) {
+      html += `
+        <div class="bug-section">
+          <div class="empty-data">
+            暂无详细数据
+          </div>
+        </div>
+      `;
+    }
+
+    return html;
+  }
+
+  truncateText(text, maxLength) {
+    if (!text) return '';
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
   }
 
   async exportReport(reportId) {
