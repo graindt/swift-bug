@@ -254,12 +254,14 @@ class BugReporterBackground {
     try {
       const results = await chrome.scripting.executeScript({
         target: { tabId: tab.id },
-        func: () => ({
-          width: window.innerWidth,
-          height: window.innerHeight,
-          scrollX: window.scrollX,
-          scrollY: window.scrollY
-        })
+        world: 'MAIN',
+        func: () => {
+          const width = window.innerWidth;
+          const height = window.innerHeight;
+          const scrollX = window.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft || 0;
+          const scrollY = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+          return { width, height, scrollX, scrollY };
+        }
       });
       if (results && results[0] && results[0].result) {
         pageData.viewport = results[0].result;
