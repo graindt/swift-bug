@@ -292,7 +292,7 @@ class BugReporterPopup {
       if (response.success) {
         this.showSuccess('Bug现场还原中...');
         // Close popup after restoration starts
-        setTimeout(() => window.close(), 1000);
+        setTimeout(() => window.close(), 3000);
       } else {
         throw new Error(response.error);
       }

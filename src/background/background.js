@@ -275,18 +275,13 @@ class BugReporterBackground {
     const domain = new URL(report.url).hostname;
     const filename = `bug-report-${domain}-${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}-${Date.now()}.json`;
 
-    // Download file
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+    // Download file using data URI (service worker context)
+    const jsonStr = JSON.stringify(exportData, null, 2);
+    const url = 'data:application/json;charset=utf-8,' + encodeURIComponent(jsonStr);
 
-    await chrome.downloads.download({
-      url: url,
-      filename: filename,
-      saveAs: true
-    });
+    await chrome.downloads.download({ url, filename, saveAs: true });
 
-    // Clean up
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    // No need to revoke data URI
   }
 
   async restoreBugData(bugData, tab) {
