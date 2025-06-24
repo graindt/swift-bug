@@ -58,7 +58,7 @@ class BugReporterBackground {
           sendResponse({ success: false, error: 'Unknown action' });
       }
     } catch (error) {
-      console.error('Background script error:', error);
+      console.error('BugReporter: Background script error:', error);
       sendResponse({ success: false, error: error.message });
     }
   }
@@ -110,7 +110,7 @@ class BugReporterBackground {
         pageData.url = results[0].result; // This includes the hash
       }
     } catch (error) {
-      console.error('Error getting complete URL with hash:', error);
+      console.error('BugReporter: Error getting complete URL with hash:', error);
       // Fall back to tab.url if injection fails
     }
 
@@ -131,21 +131,30 @@ class BugReporterBackground {
       );
 
       pageData.cookies = uniqueCookies;
-      console.log(`Collected ${uniqueCookies.length} cookies for ${url.hostname}`);
+      console.log(`BugReporter: Collected ${uniqueCookies.length} cookies for ${url.hostname}`);
     } catch (error) {
-      console.error('Error collecting cookies:', error);
+      console.error('BugReporter: Error collecting cookies:', error);
       pageData.cookies = [];
     }
 
-    // Inject content script to collect page storage data
+    // Collect storage data using content script message
     try {
+      // First try to get data from content script via message
+      const contentScriptData = await chrome.tabs.sendMessage(tab.id, { action: 'getConsoleLog' });
+
+      if (contentScriptData && contentScriptData.consoleLog) {
+        pageData.consoleLog = contentScriptData.consoleLog;
+      } else {
+        pageData.consoleLog = [];
+      }
+
+      // Inject script to collect storage data (localStorage/sessionStorage)
       const results = await chrome.scripting.executeScript({
         target: { tabId: tab.id },
         func: () => {
           const data = {
             localStorage: {},
-            sessionStorage: {},
-            consoleLog: []
+            sessionStorage: {}
           };
 
           // Collect localStorage
@@ -168,11 +177,6 @@ class BugReporterBackground {
             console.error('Error accessing sessionStorage:', error);
           }
 
-          // Get console logs if they were captured by content script
-          if (window.bugReporterLogs) {
-            data.consoleLog = window.bugReporterLogs.slice(-100); // Last 100 logs
-          }
-
           return data;
         }
       });
@@ -181,7 +185,7 @@ class BugReporterBackground {
         Object.assign(pageData, results[0].result);
       }
     } catch (error) {
-      console.error('Error collecting storage data:', error);
+      console.error('BugReporter: Error collecting storage data:', error);
       pageData.localStorage = {};
       pageData.sessionStorage = {};
       pageData.consoleLog = [];
@@ -192,7 +196,7 @@ class BugReporterBackground {
       const screenshot = await chrome.tabs.captureVisibleTab(tab.windowId, { format: 'png' });
       pageData.screenshot = screenshot;
     } catch (error) {
-      console.error('Error taking screenshot:', error);
+      console.error('BugReporter: Error taking screenshot:', error);
       pageData.screenshot = null;
     }
 
@@ -324,7 +328,7 @@ class BugReporterBackground {
              expirationDate: cookie.expirationDate
            });
          } catch (error) {
-           console.error('Error setting cookie:', error);
+           console.error('BugReporter: Error setting cookie:', error);
          }
        }
      }
@@ -354,14 +358,14 @@ class BugReporterBackground {
          },
          args: [bugData.localStorage || {}, bugData.sessionStorage || {}]
        });
-      console.log('injectBugData: storage data injected for tab', tabId);
+       console.log('BugReporter: injectBugData: storage data injected for tab', tabId);
      } catch (error) {
-       console.error('Error injecting storage data:', error);
+       console.error('BugReporter: Error injecting storage data:', error);
      }
 
      // Refresh the page to apply all changes
      await chrome.tabs.reload(tabId);
-    console.log('injectBugData: page reloaded for tab', tabId);
+     console.log('BugReporter: injectBugData: page reloaded for tab', tabId);
    }
 
 }

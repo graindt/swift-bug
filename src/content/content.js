@@ -70,6 +70,11 @@ class BugReporterContent {
   }
 
   addLogEntry(logEntry) {
+    // Filter out logs from this extension
+    if (this.isExtensionLog(logEntry.message)) {
+      return;
+    }
+
     this.consoleLog.push(logEntry);
 
     // Keep only the last N entries
@@ -79,6 +84,27 @@ class BugReporterContent {
 
     // Store in window for background script access
     window.bugReporterLogs = this.consoleLog;
+  }
+
+  isExtensionLog(message) {
+    // Filter patterns for extension-related logs
+    const extensionPatterns = [
+      'Bug Reporter',
+      'BugReporter',
+      'bugReporter',
+      'Chrome Bug Reporter',
+      'Content Script Loaded',
+      'Error accessing localStorage',
+      'Error accessing sessionStorage',
+      'Error clearing storage',
+      'Error setting localStorage item',
+      'Error setting sessionStorage item',
+      'Storage data restored'
+    ];
+
+    return extensionPatterns.some(pattern =>
+      message.toLowerCase().includes(pattern.toLowerCase())
+    );
   }
 
   setupMessageListener() {
@@ -120,7 +146,7 @@ class BugReporterContent {
         data.localStorage[key] = localStorage.getItem(key);
       }
     } catch (error) {
-      console.error('Error accessing localStorage:', error);
+      console.error('BugReporter: Error accessing localStorage:', error);
     }
 
     // Collect sessionStorage
@@ -130,7 +156,7 @@ class BugReporterContent {
         data.sessionStorage[key] = sessionStorage.getItem(key);
       }
     } catch (error) {
-      console.error('Error accessing sessionStorage:', error);
+      console.error('BugReporter: Error accessing sessionStorage:', error);
     }
 
     return data;
@@ -143,7 +169,7 @@ class BugReporterContent {
       localStorage.clear();
       sessionStorage.clear();
     } catch (error) {
-      console.error('Error clearing storage:', error);
+      console.error('BugReporter: Error clearing storage:', error);
     }
 
     // Restore localStorage
@@ -151,7 +177,7 @@ class BugReporterContent {
       try {
         localStorage.setItem(key, value);
       } catch (error) {
-        console.error('Error setting localStorage item:', key, error);
+        console.error('BugReporter: Error setting localStorage item:', key, error);
       }
     });
 
@@ -160,7 +186,7 @@ class BugReporterContent {
       try {
         sessionStorage.setItem(key, value);
       } catch (error) {
-        console.error('Error setting sessionStorage item:', key, error);
+        console.error('BugReporter: Error setting sessionStorage item:', key, error);
       }
     });
 
