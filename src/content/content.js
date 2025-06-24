@@ -303,12 +303,31 @@ class BugLinkDetector {
       this.handleViewClick(linkElement);
     });
 
-    // Insert button after the link
+    // Create import button
+    const importBtn = document.createElement('button');
+    importBtn.className = 'bug-import-btn';
+    importBtn.textContent = '导入';
+    importBtn.title = '导入Bug到插件';
+
+    // Add import click handler
+    importBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.handleImportClick(linkElement);
+    });
+
+    // Insert buttons after the link
     linkElement.parentNode.insertBefore(viewBtn, linkElement.nextSibling);
 
-    // Add a space between link and button
-    const space = document.createTextNode(' ');
-    linkElement.parentNode.insertBefore(space, viewBtn);
+    // Add a space between view and import button
+    const space1 = document.createTextNode(' ');
+    linkElement.parentNode.insertBefore(space1, viewBtn.nextSibling);
+
+    linkElement.parentNode.insertBefore(importBtn, viewBtn.nextSibling.nextSibling);
+
+    // Add a space between link and view button
+    const space2 = document.createTextNode(' ');
+    linkElement.parentNode.insertBefore(space2, viewBtn);
   }
 
   async handleViewClick(linkElement) {
@@ -338,6 +357,76 @@ class BugLinkDetector {
       viewBtn.textContent = '查看';
       viewBtn.disabled = false;
     }
+  }
+
+  async handleImportClick(linkElement) {
+    try {
+      // Show loading state
+      const importBtn = linkElement.nextSibling.nextSibling.nextSibling.nextSibling; // Skip text nodes and view button
+      const originalText = importBtn.textContent;
+      importBtn.textContent = '导入中...';
+      importBtn.disabled = true;
+
+      // Fetch and parse the JSON file
+      const bugData = await this.fetchBugReport(linkElement.href);
+
+      // Import the bug report to extension
+      const result = await this.importBugReport(bugData);
+
+      if (result.success) {
+        // Show success message
+        this.showMessage('Bug报告导入成功！', 'success');
+        importBtn.textContent = '已导入';
+        setTimeout(() => {
+          importBtn.textContent = originalText;
+          importBtn.disabled = false;
+        }, 2000);
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error('Error importing bug report:', error);
+      this.showMessage('导入失败：' + error.message, 'error');
+
+      // Restore button state
+      const importBtn = linkElement.nextSibling.nextSibling.nextSibling.nextSibling;
+      importBtn.textContent = '导入';
+      importBtn.disabled = false;
+    }
+  }
+
+  async importBugReport(bugData) {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({
+        action: 'importBugReport',
+        data: bugData
+      }, (response) => {
+        if (response && response.success) {
+          resolve(response);
+        } else {
+          reject(new Error(response?.error || 'Failed to import bug report'));
+        }
+      });
+    });
+  }
+
+  showMessage(message, type = 'success') {
+    // Create or update notification element
+    let notification = document.getElementById('swiftbug-notification');
+    if (!notification) {
+      notification = document.createElement('div');
+      notification.id = 'swiftbug-notification';
+      notification.className = 'swiftbug-notification';
+      document.body.appendChild(notification);
+    }
+
+    notification.textContent = message;
+    notification.className = `swiftbug-notification ${type} show`;
+
+    // Hide after 3 seconds
+    setTimeout(() => {
+      notification.className = `swiftbug-notification ${type}`;
+    }, 3000);
   }
 
   async fetchBugReport(url) {

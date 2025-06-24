@@ -75,6 +75,16 @@ class BugReporterBackground {
           }
           break;
 
+        case 'importBugReport':
+          try {
+            const importResult = await this.importBugReport(message.data);
+            sendResponse({ success: true, data: importResult });
+          } catch (error) {
+            console.error('BugReporter: Error importing bug report:', error);
+            sendResponse({ success: false, error: error.message });
+          }
+          break;
+
         default:
           sendResponse({ success: false, error: 'Unknown action' });
       }
@@ -431,6 +441,72 @@ class BugReporterBackground {
      await chrome.tabs.reload(tabId);
      console.log('BugReporter: injectBugData: page reloaded for tab', tabId);
    }
+
+  async importBugReport(bugData) {
+    try {
+      console.log('BugReporter: Importing bug report:', bugData.id || 'unnamed');
+
+      // Validate bug data format
+      if (!bugData.url || !bugData.timestamp) {
+        throw new Error('Invalid bug report format: missing required fields');
+      }
+
+      // Generate ID if missing
+      const reportId = bugData.id || `bug_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+      // Create bug report with proper structure
+      const bugReport = {
+        id: reportId,
+        timestamp: bugData.timestamp,
+        title: bugData.title || `Bug Report - ${new URL(bugData.url).hostname}`,
+        description: bugData.description || '',
+        url: bugData.url,
+        userAgent: bugData.userAgent || 'Unknown',
+        localStorage: bugData.localStorage || {},
+        sessionStorage: bugData.sessionStorage || {},
+        cookies: bugData.cookies || [],
+        consoleLog: bugData.consoleLog || [],
+        networkRequests: bugData.networkRequests || [],
+        screenshot: bugData.screenshot || null
+      };
+
+      // Get current reports and settings
+      const result = await chrome.storage.local.get(['bugReports', 'settings']);
+      const bugReports = result.bugReports || {};
+      const settings = result.settings || { maxStoredReports: 50 };
+
+      // Check if report already exists
+      if (bugReports[reportId]) {
+        console.log('BugReporter: Report already exists, updating...');
+      }
+
+      // Add/update report
+      bugReports[reportId] = bugReport;
+
+      // Check if we need to remove old reports
+      const reportIds = Object.keys(bugReports);
+      if (reportIds.length > settings.maxStoredReports) {
+        // Sort by timestamp and remove oldest
+        reportIds.sort((a, b) =>
+          new Date(bugReports[a].timestamp) - new Date(bugReports[b].timestamp)
+        );
+
+        const toRemove = reportIds.slice(0, reportIds.length - settings.maxStoredReports);
+        toRemove.forEach(id => delete bugReports[id]);
+        console.log(`BugReporter: Removed ${toRemove.length} old reports to stay within limit`);
+      }
+
+      // Save updated reports
+      await chrome.storage.local.set({ bugReports });
+
+      console.log('BugReporter: Bug report imported successfully:', reportId);
+      return { id: reportId, imported: true };
+
+    } catch (error) {
+      console.error('BugReporter: Error importing bug report:', error);
+      throw error;
+    }
+  }
 
   async fetchBugReportFromUrl(url) {
     try {
