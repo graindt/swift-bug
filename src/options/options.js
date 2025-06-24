@@ -18,8 +18,12 @@ class BugReporterOptions {
       this.settings = result.settings || {
         maxStoredReports: 50,
         includeScreenshot: true,
-        includeNetworkRequests: false,
-        maxConsoleLines: 100
+        includeNetworkRequests: true,
+        captureAllNetworkRequests: false,
+        maxConsoleLines: 100,
+        maxNetworkRequests: 50,
+        maxRequestBodySize: 10240,
+        ignoreStaticResources: true
       };
     } catch (error) {
       console.error('BugReporter: Error loading settings:', error);
@@ -49,7 +53,16 @@ class BugReporterOptions {
     });
 
     // Input change listeners
-    const inputs = ['includeScreenshot', 'includeNetworkRequests', 'maxConsoleLines', 'maxStoredReports'];
+    const inputs = [
+      'includeScreenshot',
+      'includeNetworkRequests',
+      'captureAllNetworkRequests',
+      'ignoreStaticResources',
+      'maxConsoleLines',
+      'maxStoredReports',
+      'maxNetworkRequests',
+      'maxRequestBodySize'
+    ];
     inputs.forEach(id => {
       const element = document.getElementById(id);
       if (element) {
@@ -64,10 +77,14 @@ class BugReporterOptions {
     // Update checkbox states
     document.getElementById('includeScreenshot').checked = this.settings.includeScreenshot;
     document.getElementById('includeNetworkRequests').checked = this.settings.includeNetworkRequests;
+    document.getElementById('captureAllNetworkRequests').checked = this.settings.captureAllNetworkRequests || false;
+    document.getElementById('ignoreStaticResources').checked = this.settings.ignoreStaticResources !== false;
 
     // Update number inputs
     document.getElementById('maxConsoleLines').value = this.settings.maxConsoleLines;
     document.getElementById('maxStoredReports').value = this.settings.maxStoredReports;
+    document.getElementById('maxNetworkRequests').value = this.settings.maxNetworkRequests || 50;
+    document.getElementById('maxRequestBodySize').value = Math.round((this.settings.maxRequestBodySize || 10240) / 1024);
   }
 
   async updateStorageInfo() {
@@ -115,8 +132,12 @@ class BugReporterOptions {
       const newSettings = {
         includeScreenshot: document.getElementById('includeScreenshot').checked,
         includeNetworkRequests: document.getElementById('includeNetworkRequests').checked,
+        captureAllNetworkRequests: document.getElementById('captureAllNetworkRequests').checked,
+        ignoreStaticResources: document.getElementById('ignoreStaticResources').checked,
         maxConsoleLines: parseInt(document.getElementById('maxConsoleLines').value),
-        maxStoredReports: parseInt(document.getElementById('maxStoredReports').value)
+        maxStoredReports: parseInt(document.getElementById('maxStoredReports').value),
+        maxNetworkRequests: parseInt(document.getElementById('maxNetworkRequests').value),
+        maxRequestBodySize: parseInt(document.getElementById('maxRequestBodySize').value) * 1024 // Convert KB to bytes
       };
 
       // Validate settings
@@ -126,6 +147,14 @@ class BugReporterOptions {
 
       if (newSettings.maxStoredReports < 10 || newSettings.maxStoredReports > 100) {
         throw new Error('最大存储Bug数量必须在10-100之间');
+      }
+
+      if (newSettings.maxNetworkRequests < 10 || newSettings.maxNetworkRequests > 100) {
+        throw new Error('网络请求数量必须在10-100之间');
+      }
+
+      if (newSettings.maxRequestBodySize < 1024 || newSettings.maxRequestBodySize > 102400) {
+        throw new Error('请求体大小限制必须在1-100KB之间');
       }
 
       // Save settings
@@ -152,8 +181,12 @@ class BugReporterOptions {
       const defaultSettings = {
         maxStoredReports: 50,
         includeScreenshot: true,
-        includeNetworkRequests: false,
-        maxConsoleLines: 100
+        includeNetworkRequests: true,
+        captureAllNetworkRequests: false,
+        maxConsoleLines: 100,
+        maxNetworkRequests: 50,
+        maxRequestBodySize: 10240,
+        ignoreStaticResources: true
       };
 
       await chrome.storage.local.set({ settings: defaultSettings });

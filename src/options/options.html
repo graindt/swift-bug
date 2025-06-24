@@ -33,7 +33,37 @@
             <span class="checkmark"></span>
             包含网络请求记录
           </label>
-          <p class="setting-description">记录最近的网络请求信息（实验性功能）</p>
+          <p class="setting-description">记录最近的网络请求信息</p>
+        </div>
+
+        <div class="setting-item">
+          <label class="setting-label">
+            <input type="checkbox" id="captureAllNetworkRequests">
+            <span class="checkmark"></span>
+            捕获所有网络请求
+          </label>
+          <p class="setting-description">默认只捕获失败的请求(4xx, 5xx错误)，启用此选项将捕获所有请求</p>
+        </div>
+
+        <div class="setting-item">
+          <label for="maxNetworkRequests">网络请求数量上限</label>
+          <input type="number" id="maxNetworkRequests" min="10" max="100" step="5">
+          <p class="setting-description">保存的网络请求数量（10-100）</p>
+        </div>
+
+        <div class="setting-item">
+          <label for="maxRequestBodySize">请求体大小限制 (KB)</label>
+          <input type="number" id="maxRequestBodySize" min="1" max="100" step="1">
+          <p class="setting-description">单个请求/响应体的最大大小（1-100KB）</p>
+        </div>
+
+        <div class="setting-item">
+          <label class="setting-label">
+            <input type="checkbox" id="ignoreStaticResources">
+            <span class="checkmark"></span>
+            忽略静态资源
+          </label>
+          <p class="setting-description">过滤CSS、JS、图片、字体等静态资源请求</p>
         </div>
 
         <div class="setting-item">
