@@ -408,6 +408,51 @@ class BugReporterPopup {
       `;
     }
 
+    // Network Requests Section
+    if (report.networkRequests && report.networkRequests.length > 0) {
+      html += `
+        <div class="bug-section">
+          <div class="bug-section-title">
+            <span class="bug-section-icon">🌐</span>
+            网络请求
+            <span class="storage-count">${report.networkRequests.length}</span>
+          </div>
+          <div class="network-requests">
+            ${report.networkRequests.map(request => {
+              const isError = request.status === 0 || request.status >= 400;
+              const statusClass = isError ? 'error' : 'success';
+              const method = request.method || 'GET';
+              const responseTime = request.responseTime ? `${request.responseTime}ms` : 'N/A';
+
+              return `
+                <div class="network-request-item">
+                  <div class="network-request-header">
+                    <span class="network-method ${method.toLowerCase()}">${method}</span>
+                    <span class="network-status ${statusClass}">${request.status || 0}</span>
+                    <span class="network-time">${responseTime}</span>
+                    <span class="network-type">${request.type}</span>
+                  </div>
+                  <div class="network-url" title="${this.escapeHtml(request.url)}">${this.escapeHtml(this.truncateText(request.url, 80))}</div>
+                  ${request.requestBody ? `
+                    <div class="network-body">
+                      <div class="network-body-label">请求体:</div>
+                      <div class="network-body-content">${this.escapeHtml(this.truncateText(request.requestBody, 200))}</div>
+                    </div>
+                  ` : ''}
+                  ${request.responseBody && request.responseBody !== '[Binary or Non-Text Response]' ? `
+                    <div class="network-body">
+                      <div class="network-body-label">响应体:</div>
+                      <div class="network-body-content">${this.escapeHtml(this.truncateText(request.responseBody, 200))}</div>
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
     // Console Logs Section
     if (report.consoleLog && report.consoleLog.length > 0) {
       html += `
