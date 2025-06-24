@@ -113,6 +113,15 @@ class BugReporterBackground {
       timestamp: new Date().toISOString(),
       userAgent: navigator.userAgent
     };
+    // Add settings retrieval for screenshot flag
+    let settings = { includeScreenshot: true };
+    try {
+      const resultSettings = await chrome.storage.local.get(['settings']);
+      settings = resultSettings.settings || {};
+    } catch (error) {
+      console.error('BugReporter: Error retrieving settings:', error);
+      settings = {};
+    }
 
     // Get the complete URL including hash from the page
     try {
@@ -218,11 +227,15 @@ class BugReporterBackground {
     }
 
     // Take screenshot
-    try {
-      const screenshot = await chrome.tabs.captureVisibleTab(tab.windowId, { format: 'png' });
-      pageData.screenshot = screenshot;
-    } catch (error) {
-      console.error('BugReporter: Error taking screenshot:', error);
+    if (settings.includeScreenshot) {
+      try {
+        const screenshot = await chrome.tabs.captureVisibleTab(tab.windowId, { format: 'png' });
+        pageData.screenshot = screenshot;
+      } catch (error) {
+        console.error('BugReporter: Error taking screenshot:', error);
+        pageData.screenshot = null;
+      }
+    } else {
       pageData.screenshot = null;
     }
 
