@@ -1,162 +1,61 @@
-// Popup script for Swift Bug
+// Main Popup Manager - Orchestrates all popup functionality
+import { BugReportService } from './services/BugReportService.js';
+import { UIRenderer } from './ui/UIRenderer.js';
+import { ModalManager } from './ui/ModalManager.js';
+import { FileManager } from './managers/FileManager.js';
+import { EventHandler } from './managers/EventHandler.js';
+import { getCurrentTab, openSettings, showSuccess, showError } from './utils/utils.js';
+
 class BugReporterPopup {
   constructor() {
     this.currentTab = null;
-    this.reports = [];
+
+    // Initialize modules
+    this.bugReportService = new BugReportService();
+    this.uiRenderer = new UIRenderer();
+    this.modalManager = new ModalManager();
+    this.fileManager = new FileManager(this.bugReportService);
+    this.eventHandler = new EventHandler(this);
+
     this.init();
   }
 
   async init() {
-    await this.getCurrentTab();
+    await this.loadCurrentTab();
     this.setupEventListeners();
     this.updateCurrentPageInfo();
     await this.loadBugReports();
   }
 
-  async getCurrentTab() {
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    this.currentTab = tabs[0];
+  async loadCurrentTab() {
+    this.currentTab = await getCurrentTab();
   }
 
   setupEventListeners() {
-    // Save button
-    document.getElementById('saveBtn').addEventListener('click', () => {
-      this.saveBugReport();
-    });
-
-    // Import button
-    document.getElementById('importBtn').addEventListener('click', () => {
-      this.importBugReport();
-    });
-
-    // Settings button
-    document.getElementById('settingsBtn').addEventListener('click', () => {
-      this.openSettings();
-    });
-
-    // File input for import
-    document.getElementById('fileInput').addEventListener('change', (event) => {
-      this.handleFileImport(event);
-    });
-
-    // Bug detail modal close button
-    document.getElementById('closeBugDetail').addEventListener('click', () => {
-      this.closeBugDetailModal();
-    });
-
-    // Close modal when clicking outside
-    document.getElementById('bugDetailModal').addEventListener('click', (event) => {
-      if (event.target === document.getElementById('bugDetailModal')) {
-        this.closeBugDetailModal();
-      }
-    });
+    this.eventHandler.setupEventListeners();
+    this.modalManager.setupModalEventListeners();
+    this.fileManager.setupFileEventListeners();
   }
 
   updateCurrentPageInfo() {
-    const urlElement = document.getElementById('currentUrl');
-    if (this.currentTab && this.currentTab.url) {
-      try {
-        const url = new URL(this.currentTab.url);
-        // Include hash in the displayed URL
-        urlElement.textContent = url.hostname + url.pathname + url.hash;
-        urlElement.title = this.currentTab.url;
-      } catch (error) {
-        urlElement.textContent = this.currentTab.url;
-      }
-    } else {
-      urlElement.textContent = 'Unknown';
-    }
+    this.uiRenderer.updateCurrentPageInfo(this.currentTab);
   }
 
   async loadBugReports() {
     try {
-      const response = await this.sendMessage({ action: 'getBugReports' });
-      if (response.success) {
-        this.reports = response.data;
-        this.renderBugReports();
-        this.updateReportCount();
+      const result = await this.bugReportService.loadBugReports();
+      if (result.success) {
+        const eventCallback = this.eventHandler.setupReportActionCallback();
+        this.uiRenderer.renderBugReports(result.data, eventCallback);
+        this.uiRenderer.updateReportCount(result.data.length);
       } else {
-        this.showError('Failed to load bug reports: ' + response.error);
+        showError('Failed to load bug reports: ' + result.error);
       }
     } catch (error) {
-      this.showError('Error loading bug reports: ' + error.message);
+      showError('Error loading bug reports: ' + error.message);
     } finally {
       document.getElementById('loadingReports').style.display = 'none';
     }
-  }
-
-  renderBugReports() {
-    const container = document.getElementById('reportsContainer');
-    const emptyState = document.getElementById('emptyState');
-    const loading = document.getElementById('loadingReports');
-
-    // Hide loading
-    loading.style.display = 'none';
-
-    if (this.reports.length === 0) {
-      emptyState.style.display = 'block';
-      return;
-    }
-
-    emptyState.style.display = 'none';
-
-    // Clear existing reports (keep loading and empty state)
-    const existingReports = container.querySelectorAll('.bug-report-item');
-    existingReports.forEach(item => item.remove());
-
-    // Render reports
-    this.reports.slice(0, 5).forEach(report => {
-      container.appendChild(this.createReportElement(report));
-    });
-  }
-
-  createReportElement(report) {
-    const div = document.createElement('div');
-    div.className = 'bug-report-item';
-
-    // Format date
-    const date = new Date(report.timestamp);
-    const formattedDate = date.toLocaleDateString('zh-CN') + ' ' +
-                         date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
-
-    // Get domain from URL
-    let domain = 'Unknown';
-    try {
-      domain = new URL(report.url).hostname;
-    } catch (error) {
-      domain = report.url;
-    }
-
-    div.innerHTML = `
-      <div class="bug-report-header">
-        <div class="bug-report-title">${this.escapeHtml(report.title)}</div>
-        <div class="bug-report-time">${formattedDate}</div>
-      </div>
-      <div class="bug-report-url">${this.escapeHtml(domain)}</div>
-      <div class="bug-report-actions">
-        <button class="btn btn-small btn-view" data-action="view" data-id="${report.id}">查看</button>
-        <button class="btn btn-small btn-export" data-action="export" data-id="${report.id}">导出</button>
-        <button class="btn btn-small btn-delete" data-action="delete" data-id="${report.id}">删除</button>
-        <button class="btn btn-small btn-restore" data-action="restore" data-id="${report.id}">还原</button>
-      </div>
-    `;
-
-    // Add event listeners
-    div.querySelectorAll('[data-action]').forEach(button => {
-      button.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const action = button.getAttribute('data-action');
-        const reportId = button.getAttribute('data-id');
-        this.handleReportAction(action, reportId);
-      });
-    });
-
-    return div;
-  }
-
-  updateReportCount() {
-    const countElement = document.getElementById('reportCount');
-    countElement.textContent = `${this.reports.length}/50`;
   }
 
   async saveBugReport() {
@@ -168,30 +67,17 @@ class BugReporterPopup {
       saveBtn.innerHTML = '<span class="btn-icon">⏳</span>正在保存...';
       saveBtn.disabled = true;
 
-      // Collect page data
-      const response = await this.sendMessage({
-        action: 'collectPageData'
-      });
+      const result = await this.bugReportService.saveBugReport();
 
-      if (!response.success) {
-        throw new Error(response.error);
-      }
-
-      // Save the bug report
-      const saveResponse = await this.sendMessage({
-        action: 'saveBugReport',
-        data: response.data
-      });
-
-      if (saveResponse.success) {
-        this.showSuccess('Bug快照保存成功！');
+      if (result.success) {
+        showSuccess('Bug快照保存成功！');
         await this.loadBugReports(); // Reload reports
       } else {
-        throw new Error(saveResponse.error);
+        throw new Error(result.error);
       }
 
     } catch (error) {
-      this.showError('保存失败: ' + error.message);
+      showError('保存失败: ' + error.message);
     } finally {
       // Restore button state
       saveBtn.innerHTML = originalText;
@@ -216,305 +102,30 @@ class BugReporterPopup {
           break;
       }
     } catch (error) {
-      this.showError('操作失败: ' + error.message);
+      showError('操作失败: ' + error.message);
     }
   }
 
   async viewReport(reportId) {
-    // Find the report
-    const report = this.reports.find(r => r.id === reportId);
+    const report = this.bugReportService.getReportById(reportId);
     if (!report) {
-      this.showError('报告不存在');
+      showError('报告不存在');
       return;
     }
 
-    // Show the bug detail modal
-    this.showBugDetailModal(report);
-  }
-
-  showBugDetailModal(report) {
-    const modal = document.getElementById('bugDetailModal');
-    const body = document.getElementById('bugDetailBody');
-
-    // Generate the bug detail HTML
-    body.innerHTML = this.generateBugDetailHTML(report);
-
-    // Expand popup body width for detail view
-    document.body.style.width = '1200px';
-    document.body.style.height = '900px';
-    document.body.style.maxHeight = '900px';
-
-    // Show the modal
-    modal.style.display = 'flex';
-
-    // Add escape key listener
-    document.addEventListener('keydown', this.handleEscapeKey.bind(this));
-  }
-
-  closeBugDetailModal() {
-    const modal = document.getElementById('bugDetailModal');
-    modal.style.display = 'none';
-
-    // Restore original popup body size
-    document.body.style.width = '400px';
-    document.body.style.height = 'auto';
-    document.body.style.maxHeight = '600px';
-
-    // Remove escape key listener
-    document.removeEventListener('keydown', this.handleEscapeKey.bind(this));
-  }
-
-  handleEscapeKey(event) {
-    if (event.key === 'Escape') {
-      this.closeBugDetailModal();
-    }
-  }
-
-  generateBugDetailHTML(report) {
-    const date = new Date(report.timestamp);
-    const formattedDate = date.toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-
-    let domain = 'Unknown';
-    try {
-      domain = new URL(report.url).hostname;
-    } catch (error) {
-      domain = report.url;
-    }
-
-    let html = `
-      <!-- Basic Info Section -->
-      <div class="bug-section">
-        <div class="bug-section-title">
-          <span class="bug-section-icon">📋</span>
-          基本信息
-        </div>
-
-        <div class="bug-url">
-          <div class="bug-url-label">页面地址</div>
-          <div class="bug-url-value">${this.escapeHtml(report.url)}</div>
-        </div>
-
-        <div class="bug-info-grid">
-          <div class="bug-info-item">
-            <div class="bug-info-label">页面标题</div>
-            <div class="bug-info-value">${this.escapeHtml(report.title || 'N/A')}</div>
-          </div>
-          <div class="bug-info-item">
-            <div class="bug-info-label">捕获时间</div>
-            <div class="bug-info-value">${formattedDate}</div>
-          </div>
-          <div class="bug-info-item">
-            <div class="bug-info-label">域名</div>
-            <div class="bug-info-value">${this.escapeHtml(domain)}</div>
-          </div>
-          <div class="bug-info-item">
-            <div class="bug-info-label">用户代理</div>
-            <div class="bug-info-value" title="${this.escapeHtml(report.userAgent || 'N/A')}">${this.truncateText(report.userAgent || 'N/A', 50)}</div>
-          </div>
-        </div>
-      </div>
-    `;
-
-    // Screenshot Section
-    if (report.screenshot) {
-      html += `
-        <div class="bug-section">
-          <div class="bug-section-title">
-            <span class="bug-section-icon">📸</span>
-            页面截图
-          </div>
-          <div class="bug-screenshot">
-            <img src="${report.screenshot}" alt="页面截图" onclick="window.open('${report.screenshot}', '_blank')">
-          </div>
-        </div>
-      `;
-    }
-
-    // Storage Section
-    const hasLocalStorage = report.localStorage && Object.keys(report.localStorage).length > 0;
-    const hasSessionStorage = report.sessionStorage && Object.keys(report.sessionStorage).length > 0;
-
-    if (hasLocalStorage || hasSessionStorage) {
-      html += `
-        <div class="bug-section">
-          <div class="bug-section-title">
-            <span class="bug-section-icon">💾</span>
-            浏览器存储
-          </div>
-      `;
-
-      if (hasLocalStorage) {
-        html += `
-          <div class="storage-section">
-            <div class="storage-title">
-              📦 LocalStorage
-              <span class="storage-count">${Object.keys(report.localStorage).length}</span>
-            </div>
-            <div class="storage-items">
-              ${Object.entries(report.localStorage).map(([key, value]) => `
-                <div class="storage-item">
-                  <div class="storage-key">${this.escapeHtml(key)}</div>
-                  <div class="storage-value">${this.escapeHtml(this.truncateText(value, 200))}</div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
-      }
-
-      if (hasSessionStorage) {
-        html += `
-          <div class="storage-section">
-            <div class="storage-title">
-              🔒 SessionStorage
-              <span class="storage-count">${Object.keys(report.sessionStorage).length}</span>
-            </div>
-            <div class="storage-items">
-              ${Object.entries(report.sessionStorage).map(([key, value]) => `
-                <div class="storage-item">
-                  <div class="storage-key">${this.escapeHtml(key)}</div>
-                  <div class="storage-value">${this.escapeHtml(this.truncateText(value, 200))}</div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
-      }
-
-      html += '</div>';
-    }
-
-    // Cookies Section
-    if (report.cookies && report.cookies.length > 0) {
-      html += `
-        <div class="bug-section">
-          <div class="bug-section-title">
-            <span class="bug-section-icon">🍪</span>
-            Cookies
-            <span class="storage-count">${report.cookies.length}</span>
-          </div>
-          <div class="storage-items">
-            ${report.cookies.map(cookie => `
-              <div class="storage-item">
-                <div class="storage-key">${this.escapeHtml(cookie.name)}</div>
-                <div class="storage-value" title="Domain: ${this.escapeHtml(cookie.domain)}, Path: ${this.escapeHtml(cookie.path)}">${this.escapeHtml(this.truncateText(cookie.value, 100))}</div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
-    }
-
-    // Network Requests Section
-    if (report.networkRequests && report.networkRequests.length > 0) {
-      html += `
-        <div class="bug-section">
-          <div class="bug-section-title">
-            <span class="bug-section-icon">🌐</span>
-            网络请求
-            <span class="storage-count">${report.networkRequests.length}</span>
-          </div>
-          <div class="network-requests">
-            ${report.networkRequests.map(request => {
-              const isError = request.status === 0 || request.status >= 400;
-              const statusClass = isError ? 'error' : 'success';
-              const method = request.method || 'GET';
-              const responseTime = request.responseTime ? `${request.responseTime}ms` : 'N/A';
-
-              return `
-                <div class="network-request-item">
-                  <div class="network-request-header">
-                    <span class="network-method ${method.toLowerCase()}">${method}</span>
-                    <span class="network-status ${statusClass}">${request.status || 0}</span>
-                    <span class="network-time">${responseTime}</span>
-                    <span class="network-type">${request.type}</span>
-                  </div>
-                  <div class="network-url" title="${this.escapeHtml(request.url)}">${this.escapeHtml(this.truncateText(request.url, 80))}</div>
-                  ${request.requestBody ? `
-                    <div class="network-body">
-                      <div class="network-body-label">请求体:</div>
-                      <div class="network-body-content">${this.escapeHtml(this.truncateText(request.requestBody, 200))}</div>
-                    </div>
-                  ` : ''}
-                  ${request.responseBody && request.responseBody !== '[Binary or Non-Text Response]' ? `
-                    <div class="network-body">
-                      <div class="network-body-label">响应体:</div>
-                      <div class="network-body-content">${this.escapeHtml(this.truncateText(request.responseBody, 200))}</div>
-                    </div>
-                  ` : ''}
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-      `;
-    }
-
-    // Console Logs Section
-    if (report.consoleLog && report.consoleLog.length > 0) {
-      html += `
-        <div class="bug-section">
-          <div class="bug-section-title">
-            <span class="bug-section-icon">🖥️</span>
-            控制台日志
-            <span class="storage-count">${report.consoleLog.length}</span>
-          </div>
-          <div class="console-logs">
-            ${report.consoleLog.map(log => `
-              <div class="console-log-item">
-                <span class="console-log-level ${log.level || 'log'}">${log.level || 'log'}</span>
-                ${this.escapeHtml(log.message || log.toString())}
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
-    }
-
-    // If no data sections were added, show empty state
-    if (!report.screenshot && !hasLocalStorage && !hasSessionStorage &&
-        (!report.cookies || report.cookies.length === 0) &&
-        (!report.networkRequests || report.networkRequests.length === 0) &&
-        (!report.consoleLog || report.consoleLog.length === 0)) {
-      html += `
-        <div class="bug-section">
-          <div class="empty-data">
-            暂无详细数据
-          </div>
-        </div>
-      `;
-    }
-
-    return html;
-  }
-
-  truncateText(text, maxLength) {
-    if (!text) return '';
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
+    this.modalManager.showBugDetailModal(
+      report,
+      this.uiRenderer.generateBugDetailHTML.bind(this.uiRenderer)
+    );
   }
 
   async exportReport(reportId) {
-    try {
-      const response = await this.sendMessage({
-        action: 'exportBugReport',
-        reportId: reportId
-      });
+    const result = await this.bugReportService.exportReport(reportId);
 
-      if (response.success) {
-        this.showSuccess('Bug报告导出成功！');
-      } else {
-        throw new Error(response.error);
-      }
-    } catch (error) {
-      this.showError('导出失败: ' + error.message);
+    if (result.success) {
+      showSuccess('Bug报告导出成功！');
+    } else {
+      throw new Error(result.error);
     }
   }
 
@@ -523,146 +134,50 @@ class BugReporterPopup {
       return;
     }
 
-    try {
-      const response = await this.sendMessage({
-        action: 'deleteBugReport',
-        reportId: reportId
-      });
+    const result = await this.bugReportService.deleteReport(reportId);
 
-      if (response.success) {
-        this.showSuccess('Bug报告已删除');
-        await this.loadBugReports(); // Reload reports
-        // If no reports left, clear the reports container and show empty state
-        if (this.reports.length === 0) {
-          const container = document.getElementById('reportsContainer');
-          const emptyState = document.getElementById('emptyState');
-          // Remove all report items
-          const existingReports = container.querySelectorAll('.bug-report-item');
-          existingReports.forEach(item => item.remove());
-          // Show empty state
-          emptyState.style.display = 'block';
-        }
-      } else {
-        throw new Error(response.error);
+    if (result.success) {
+      showSuccess('Bug报告已删除');
+      await this.loadBugReports(); // Reload reports
+
+      // If no reports left, clear the reports container and show empty state
+      const reports = this.bugReportService.getReports();
+      if (reports.length === 0) {
+        const container = document.getElementById('reportsContainer');
+        const emptyState = document.getElementById('emptyState');
+        // Remove all report items
+        const existingReports = container.querySelectorAll('.bug-report-item');
+        existingReports.forEach(item => item.remove());
+        // Show empty state
+        emptyState.style.display = 'block';
       }
-    } catch (error) {
-      this.showError('删除失败: ' + error.message);
+    } else {
+      throw new Error(result.error);
     }
   }
 
   async restoreReport(reportId) {
-    // Find the report
-    const report = this.reports.find(r => r.id === reportId);
+    const report = this.bugReportService.getReportById(reportId);
     if (!report) {
-      this.showError('报告不存在');
+      showError('报告不存在');
       return;
     }
-    try {
-      const response = await this.sendMessage({
-        action: 'restoreBugData',
-        data: report
-      });
-      if (response.success) {
-        this.showSuccess('还原成功！页面已自动跳转并恢复数据。');
-      } else {
-        throw new Error(response.error);
-      }
-    } catch (error) {
-      this.showError('还原失败: ' + error.message);
+
+    const result = await this.bugReportService.restoreReport(report);
+
+    if (result.success) {
+      showSuccess('还原成功！页面已自动跳转并恢复数据。');
+    } else {
+      throw new Error(result.error);
     }
   }
 
   importBugReport() {
-    document.getElementById('fileInput').click();
-  }
-
-  async handleFileImport(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    try {
-      const text = await this.readFileAsText(file);
-      const data = JSON.parse(text);
-
-      // Validate file format and support both wrapped and raw report
-      let report;
-      if (data.report && data.report.url) {
-        report = data.report;
-      } else if (data.url && data.url && data.id) {
-        report = data;
-      } else {
-        throw new Error('Invalid bug report file format');
-      }
-
-      // Restore bug data
-      const response = await this.sendMessage({
-        action: 'restoreBugData',
-        data: report
-      });
-
-      if (response.success) {
-        this.showSuccess('Bug现场还原中...');
-        // Close popup after restoration starts
-        setTimeout(() => window.close(), 3000);
-      } else {
-        throw new Error(response.error);
-      }
-
-    } catch (error) {
-      this.showError('导入失败: ' + error.message);
-    } finally {
-      // Clear file input
-      event.target.value = '';
-    }
+    this.fileManager.triggerImport();
   }
 
   openSettings() {
-    chrome.tabs.create({ url: chrome.runtime.getURL('options/options.html') });
-  }
-
-  // Utility methods
-  async sendMessage(message) {
-    return new Promise((resolve) => {
-      chrome.runtime.sendMessage(message, resolve);
-    });
-  }
-
-  readFileAsText(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target.result);
-      reader.onerror = (e) => reject(new Error('Failed to read file'));
-      reader.readAsText(file);
-    });
-  }
-
-  escapeHtml(unsafe) {
-    return unsafe
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-
-  showSuccess(message) {
-    this.showMessage(message, 'success');
-  }
-
-  showError(message) {
-    this.showMessage(message, 'error');
-  }
-
-  showMessage(message, type = 'success') {
-    const statusElement = document.getElementById('statusMessage');
-    statusElement.textContent = message;
-    statusElement.className = `status-message ${type}`;
-    statusElement.style.display = 'block';
-
-    // Hide after 3 seconds
-    setTimeout(() => {
-      statusElement.style.display = 'none';
-    }, 3000);
+    openSettings();
   }
 }
 
