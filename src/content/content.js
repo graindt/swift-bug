@@ -223,6 +223,375 @@ window.bugReporterContentLoaded = true;
 // Debug log
 console.log('BugReporter: Content Script Loaded', bugReporterContent.getPageState());
 
+// Bug Link Detector - Detects swiftbug-report JSON links and adds view buttons
+class BugLinkDetector {
+  constructor() {
+    this.processedLinks = new Set();
+    this.init();
+  }
+
+  init() {
+    // Inject styles
+    this.injectStyles();
+    // Scan existing links
+    this.scanExistingLinks();
+    // Set up mutation observer for dynamic content
+    this.setupMutationObserver();
+  }
+
+  injectStyles() {
+    const style = document.createElement('link');
+    style.rel = 'stylesheet';
+    style.type = 'text/css';
+    style.href = chrome.runtime.getURL('content/inject.css');
+    (document.head || document.documentElement).appendChild(style);
+  }
+
+  scanExistingLinks() {
+    const links = document.querySelectorAll('a[href*=".json"]');
+    links.forEach(link => this.processLink(link));
+  }
+
+  setupMutationObserver() {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            // Check if the node itself is a link
+            if (node.tagName === 'A' && node.href && node.href.includes('.json')) {
+              this.processLink(node);
+            }
+            // Check for links within the added node
+            const links = node.querySelectorAll ? node.querySelectorAll('a[href*=".json"]') : [];
+            links.forEach(link => this.processLink(link));
+          }
+        });
+      });
+    });
+
+    observer.observe(document.body || document.documentElement, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  processLink(linkElement) {
+    // Check if already processed
+    if (this.processedLinks.has(linkElement)) return;
+
+    // Check if link text matches swiftbug-report pattern
+    const linkText = linkElement.textContent.trim();
+    const swiftbugPattern = /swiftbug-report.*\.json/i;
+
+    if (swiftbugPattern.test(linkText)) {
+      this.addViewButton(linkElement);
+      this.processedLinks.add(linkElement);
+    }
+  }
+
+  addViewButton(linkElement) {
+    // Create view button
+    const viewBtn = document.createElement('button');
+    viewBtn.className = 'bug-view-btn';
+    viewBtn.textContent = '查看';
+    viewBtn.title = '查看Bug详情';
+
+    // Add click handler
+    viewBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.handleViewClick(linkElement);
+    });
+
+    // Insert button after the link
+    linkElement.parentNode.insertBefore(viewBtn, linkElement.nextSibling);
+
+    // Add a space between link and button
+    const space = document.createTextNode(' ');
+    linkElement.parentNode.insertBefore(space, viewBtn);
+  }
+
+  async handleViewClick(linkElement) {
+    try {
+      // Show loading state
+      const viewBtn = linkElement.nextSibling.nextSibling; // Skip text node
+      const originalText = viewBtn.textContent;
+      viewBtn.textContent = '加载中...';
+      viewBtn.disabled = true;
+
+      // Fetch and parse the JSON file
+      const bugData = await this.fetchBugReport(linkElement.href);
+
+      // Show modal
+      const modal = new ContentModalManager();
+      modal.showBugDetailModal(bugData);
+
+      // Restore button state
+      viewBtn.textContent = originalText;
+      viewBtn.disabled = false;
+    } catch (error) {
+      console.error('Error loading bug report:', error);
+      alert('加载Bug报告失败：' + error.message);
+
+      // Restore button state
+      const viewBtn = linkElement.nextSibling.nextSibling;
+      viewBtn.textContent = '查看';
+      viewBtn.disabled = false;
+    }
+  }
+
+  async fetchBugReport(url) {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({
+        action: 'fetchBugReportFromUrl',
+        url: url
+      }, (response) => {
+        if (response && response.success) {
+          resolve(response.data);
+        } else {
+          reject(new Error(response?.error || 'Failed to fetch bug report'));
+        }
+      });
+    });
+  }
+}
+
+// Content Modal Manager - Handles modal display in content script context
+class ContentModalManager {
+  constructor() {
+    this.modal = null;
+    this.isEscapeListenerAdded = false;
+  }
+
+  showBugDetailModal(bugData) {
+    // Remove existing modal if any
+    this.closeBugDetailModal();
+
+    // Create modal structure
+    this.createModal(bugData);
+
+    // Add event listeners
+    this.addEventListeners();
+
+    // Show modal
+    this.modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  createModal(bugData) {
+    this.modal = document.createElement('div');
+    this.modal.className = 'swiftbug-content-modal';
+    this.modal.innerHTML = `
+      <div class="swiftbug-modal-content">
+        <div class="swiftbug-modal-header">
+          <h2>Bug详情</h2>
+          <button class="swiftbug-modal-close" type="button">&times;</button>
+        </div>
+        <div class="swiftbug-modal-body">
+          ${this.generateBugDetailHTML(bugData)}
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(this.modal);
+  }
+
+  generateBugDetailHTML(report) {
+    const date = new Date(report.timestamp);
+    const formattedDate = date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+
+    let domain = 'Unknown';
+    try {
+      domain = new URL(report.url).hostname;
+    } catch (error) {
+      domain = report.url;
+    }
+
+    let html = `
+      <div class="bug-section">
+        <div class="bug-section-title">
+          <span class="bug-section-icon">📋</span>
+          基本信息
+        </div>
+        <div class="bug-url">
+          <div class="bug-url-label">页面地址</div>
+          <div class="bug-url-value">${this.escapeHtml(report.url)}</div>
+        </div>
+        <div class="bug-info-grid">
+          <div class="bug-info-item">
+            <div class="bug-info-label">页面标题</div>
+            <div class="bug-info-value">${this.escapeHtml(report.title || 'N/A')}</div>
+          </div>
+          <div class="bug-info-item">
+            <div class="bug-info-label">捕获时间</div>
+            <div class="bug-info-value">${formattedDate}</div>
+          </div>
+          <div class="bug-info-item">
+            <div class="bug-info-label">域名</div>
+            <div class="bug-info-value">${this.escapeHtml(domain)}</div>
+          </div>
+          <div class="bug-info-item">
+            <div class="bug-info-label">用户代理</div>
+            <div class="bug-info-value" title="${this.escapeHtml(report.userAgent || 'N/A')}">${this.truncateText(report.userAgent || 'N/A', 50)}</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Add other sections similar to UIRenderer.js
+    if (report.screenshot) {
+      html += `
+        <div class="bug-section">
+          <div class="bug-section-title">
+            <span class="bug-section-icon">📸</span>
+            页面截图
+          </div>
+          <div class="bug-screenshot">
+            <img src="${report.screenshot}" alt="页面截图" onclick="window.open('${report.screenshot}', '_blank')">
+          </div>
+        </div>
+      `;
+    }
+
+    // Storage sections
+    const hasLocalStorage = report.localStorage && Object.keys(report.localStorage).length > 0;
+    const hasSessionStorage = report.sessionStorage && Object.keys(report.sessionStorage).length > 0;
+
+    if (hasLocalStorage || hasSessionStorage) {
+      html += `<div class="bug-section"><div class="bug-section-title"><span class="bug-section-icon">💾</span>浏览器存储</div>`;
+
+      if (hasLocalStorage) {
+        html += `
+          <div class="storage-section">
+            <div class="storage-title">📦 LocalStorage <span class="storage-count">${Object.keys(report.localStorage).length}</span></div>
+            <div class="storage-items">
+              ${Object.entries(report.localStorage).map(([key, value]) => `
+                <div class="storage-item">
+                  <div class="storage-key">${this.escapeHtml(key)}</div>
+                  <div class="storage-value">${this.escapeHtml(this.truncateText(value, 200))}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      if (hasSessionStorage) {
+        html += `
+          <div class="storage-section">
+            <div class="storage-title">🔒 SessionStorage <span class="storage-count">${Object.keys(report.sessionStorage).length}</span></div>
+            <div class="storage-items">
+              ${Object.entries(report.sessionStorage).map(([key, value]) => `
+                <div class="storage-item">
+                  <div class="storage-key">${this.escapeHtml(key)}</div>
+                  <div class="storage-value">${this.escapeHtml(this.truncateText(value, 200))}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      html += '</div>';
+    }
+
+    // Console logs
+    if (report.consoleLog && report.consoleLog.length > 0) {
+      html += `
+        <div class="bug-section">
+          <div class="bug-section-title">
+            <span class="bug-section-icon">🖥️</span>
+            控制台日志
+            <span class="storage-count">${report.consoleLog.length}</span>
+          </div>
+          <div class="console-logs">
+            ${report.consoleLog.map(log => `
+              <div class="console-log-item">
+                <span class="console-log-level ${log.level || 'log'}">${log.level || 'log'}</span>
+                ${this.escapeHtml(log.message || log.toString())}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    return html;
+  }
+
+  addEventListeners() {
+    // Close button
+    const closeBtn = this.modal.querySelector('.swiftbug-modal-close');
+    closeBtn.addEventListener('click', () => this.closeBugDetailModal());
+
+    // Click outside to close
+    this.modal.addEventListener('click', (e) => {
+      if (e.target === this.modal) {
+        this.closeBugDetailModal();
+      }
+    });
+
+    // Escape key
+    if (!this.isEscapeListenerAdded) {
+      document.addEventListener('keydown', this.handleEscapeKey.bind(this));
+      this.isEscapeListenerAdded = true;
+    }
+  }
+
+  handleEscapeKey(event) {
+    if (event.key === 'Escape' && this.modal && this.modal.style.display === 'flex') {
+      this.closeBugDetailModal();
+    }
+  }
+
+  closeBugDetailModal() {
+    if (this.modal) {
+      this.modal.remove();
+      this.modal = null;
+      document.body.style.overflow = '';
+    }
+
+    if (this.isEscapeListenerAdded) {
+      document.removeEventListener('keydown', this.handleEscapeKey.bind(this));
+      this.isEscapeListenerAdded = false;
+    }
+  }
+
+  escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  truncateText(text, maxLength) {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  }
+}
+
+// Initialize bug link detector
+let bugLinkDetector;
+
+function initBugLinkDetector() {
+  if (!bugLinkDetector) {
+    bugLinkDetector = new BugLinkDetector();
+  }
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initBugLinkDetector);
+} else {
+  initBugLinkDetector();
+}
+
 // 注入悬浮保存Bug快照按钮到页面右下角
 // (function injectBugFabButton() {
 //   if (window.__bugFabInjected) return;

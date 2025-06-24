@@ -65,6 +65,16 @@ class BugReporterBackground {
           sendResponse({ success: true });
           break;
 
+        case 'fetchBugReportFromUrl':
+          try {
+            const bugReportData = await this.fetchBugReportFromUrl(message.url);
+            sendResponse({ success: true, data: bugReportData });
+          } catch (error) {
+            console.error('BugReporter: Error fetching bug report from URL:', error);
+            sendResponse({ success: false, error: error.message });
+          }
+          break;
+
         default:
           sendResponse({ success: false, error: 'Unknown action' });
       }
@@ -421,6 +431,50 @@ class BugReporterBackground {
      await chrome.tabs.reload(tabId);
      console.log('BugReporter: injectBugData: page reloaded for tab', tabId);
    }
+
+  async fetchBugReportFromUrl(url) {
+    try {
+      console.log('BugReporter: Fetching bug report from URL:', url);
+
+      // Fetch the JSON file
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        // Try to parse as JSON anyway, in case the server doesn't set correct content-type
+        console.warn('BugReporter: Content-Type is not application/json, but attempting to parse as JSON');
+      }
+
+      const jsonData = await response.json();
+
+      // Check if this is an exported bug report format
+      if (jsonData.report) {
+        // This is an exported bug report with version info
+        console.log('BugReporter: Found exported bug report format');
+        return jsonData.report;
+      } else if (jsonData.url && jsonData.timestamp) {
+        // This looks like a direct bug report
+        console.log('BugReporter: Found direct bug report format');
+        return jsonData;
+      } else {
+        throw new Error('不是有效的Bug报告格式');
+      }
+    } catch (error) {
+      console.error('BugReporter: Error fetching bug report:', error);
+
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('无法访问该URL，请检查网络连接');
+      } else if (error instanceof SyntaxError) {
+        throw new Error('文件不是有效的JSON格式');
+      } else {
+        throw error;
+      }
+    }
+  }
 
 }
 

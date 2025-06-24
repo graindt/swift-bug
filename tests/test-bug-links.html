@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Bug Links - Swift Bug Extension</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .test-section h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .link-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        .filename {
+            text-decoration: none;
+            color: #007bff;
+            font-family: monospace;
+        }
+        .filename:hover {
+            text-decoration: underline;
+        }
+        .description {
+            font-size: 14px;
+            color: #666;
+            margin-left: 10px;
+        }
+        .instructions {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .sample-json {
+            background: #1e1e1e;
+            color: #fff;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Swift Bug 扩展测试页面</h1>
+
+    <div class="instructions">
+        <h3>📋 测试说明</h3>
+        <p>这个页面用于测试 Swift Bug 扩展的新功能：检测并为 swiftbug-report JSON 链接添加查看按钮。</p>
+        <ol>
+            <li>安装并启用 Swift Bug 浏览器扩展</li>
+            <li>刷新这个页面</li>
+            <li>查看下面的链接，符合条件的链接旁边应该会出现绿色的"查看"按钮</li>
+            <li>点击"查看"按钮测试功能</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>✅ 应该显示查看按钮的链接</h2>
+        <p>这些链接的文本匹配 <code>swiftbug-report.*.json</code> 模式，应该会显示查看按钮：</p>
+
+        <div class="link-item">
+            <a class="filename" href="#" target="_blank">swiftbug-report-example.com-20250624-1750739244724.json</a>
+            <span class="description">- 标准格式的bug报告链接</span>
+        </div>
+
+        <div class="link-item">
+            <a class="filename" href="#" target="_blank">swiftbug-report-www.311.digibook.artech.cn-20250624-1750739244724.json</a>
+            <span class="description">- 来自用户示例的链接</span>
+        </div>
+
+        <div class="link-item">
+            <a class="filename" href="#" target="_blank">SwiftBug-Report-Test-12345.json</a>
+            <span class="description">- 大小写变化的链接</span>
+        </div>
+
+        <div class="link-item">
+            <a class="filename" href="#" target="_blank">swiftbug-report.json</a>
+            <span class="description">- 最简形式的链接</span>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>❌ 不应该显示查看按钮的链接</h2>
+        <p>这些链接不匹配模式，不应该显示查看按钮：</p>
+
+        <div class="link-item">
+            <a class="filename" href="#" target="_blank">normal-file.json</a>
+            <span class="description">- 普通的JSON文件</span>
+        </div>
+
+        <div class="link-item">
+            <a class="filename" href="#" target="_blank">bug-report.json</a>
+            <span class="description">- 缺少swiftbug前缀</span>
+        </div>
+
+        <div class="link-item">
+            <a class="filename" href="#" target="_blank">swiftbug-report.txt</a>
+            <span class="description">- 不是JSON文件</span>
+        </div>
+
+        <div class="link-item">
+            <a class="filename" href="#" target="_blank">config.json</a>
+            <span class="description">- 配置文件</span>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 功能测试</h2>
+        <p>点击下面的链接测试实际的JSON文件加载功能：</p>
+
+        <div class="link-item">
+            <a class="filename" href="data:application/json;charset=utf-8,%7B%22report%22%3A%7B%22id%22%3A%22test-bug-001%22%2C%22timestamp%22%3A%222025-06-24T05%3A37%3A00.000Z%22%2C%22title%22%3A%22Test%20Bug%20Report%22%2C%22url%22%3A%22https%3A//example.com%22%2C%22userAgent%22%3A%22Mozilla/5.0%20Test%22%2C%22localStorage%22%3A%7B%22testKey%22%3A%22testValue%22%7D%2C%22sessionStorage%22%3A%7B%7D%2C%22consoleLog%22%3A%5B%7B%22level%22%3A%22error%22%2C%22message%22%3A%22Test%20error%20message%22%2C%22timestamp%22%3A%222025-06-24T05%3A37%3A00.000Z%22%7D%5D%2C%22cookies%22%3A%5B%5D%7D%2C%22version%22%3A%221.0.0%22%2C%22exportedAt%22%3A%222025-06-24T05%3A37%3A00.000Z%22%7D" target="_blank">swiftbug-report-test-sample.json</a>
+            <span class="description">- 测试用的样本数据 (Data URI)</span>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>📄 样本JSON格式</h2>
+        <p>Swift Bug 扩展支持的JSON格式示例：</p>
+        <div class="sample-json">
+{
+  "version": "1.0.0",
+  "exportedAt": "2025-06-24T05:37:00.000Z",
+  "report": {
+    "id": "bug_1719234567890_abcdef123",
+    "timestamp": "2025-06-24T05:37:00.000Z",
+    "title": "Bug Report - example.com",
+    "url": "https://example.com/page",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "localStorage": {
+      "key1": "value1",
+      "key2": "value2"
+    },
+    "sessionStorage": {
+      "sessionKey": "sessionValue"
+    },
+    "consoleLog": [
+      {
+        "level": "error",
+        "message": "Uncaught TypeError: Cannot read property 'x' of undefined",
+        "timestamp": "2025-06-24T05:37:00.000Z"
+      }
+    ],
+    "cookies": [
+      {
+        "name": "session_id",
+        "value": "abc123",
+        "domain": "example.com",
+        "path": "/"
+      }
+    ],
+    "screenshot": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+  }
+}
+        </div>
+    </div>
+
+    <script>
+        // Dynamic link injection test
+        setTimeout(() => {
+            const testSection = document.querySelector('.test-section');
+            const newLinkDiv = document.createElement('div');
+            newLinkDiv.className = 'link-item';
+            newLinkDiv.innerHTML = `
+                <a class="filename" href="#" target="_blank">swiftbug-report-dynamically-added.json</a>
+                <span class="description">- 动态添加的链接 (测试MutationObserver)</span>
+            `;
+            testSection.appendChild(newLinkDiv);
+            console.log('Dynamic link added for testing');
+        }, 2000);
+    </script>
+</body>
+</html>
