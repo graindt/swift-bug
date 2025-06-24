@@ -156,10 +156,10 @@ class BugReporterBackground {
       const networkData = await chrome.tabs.sendMessage(tab.id, { action: 'getNetworkRequests' });
       if (networkData && networkData.networkRequests) {
         pageData.networkRequests = networkData.networkRequests;
-        console.log(`BugReporter: Collected ${networkData.networkRequests.length} network requests`);
+        console.log(`BugReporter: Collected ${networkData.networkRequests.length} network requests`, networkData.networkRequests);
       } else {
         pageData.networkRequests = [];
-        console.log('BugReporter: No network requests found');
+        console.log('BugReporter: No network requests found, networkData:', networkData);
       }
 
       // Inject script to collect storage data (localStorage/sessionStorage)

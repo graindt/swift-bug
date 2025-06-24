@@ -481,6 +481,7 @@ class BugReporterPopup {
     // If no data sections were added, show empty state
     if (!report.screenshot && !hasLocalStorage && !hasSessionStorage &&
         (!report.cookies || report.cookies.length === 0) &&
+        (!report.networkRequests || report.networkRequests.length === 0) &&
         (!report.consoleLog || report.consoleLog.length === 0)) {
       html += `
         <div class="bug-section">
