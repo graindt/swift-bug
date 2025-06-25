@@ -67,6 +67,7 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 // Listen for forwarded page logs and network requests
 window.bugReporterCapturedLogs = [];
 window.bugReporterNetworkRequests = [];
+window.bugReporterPendingLogs = []; // Buffer for logs received before BugReporterContent is ready
 
 // Listen for CustomEvent from page console interceptor
 document.addEventListener('swiftbug-reporter-console', e => {
@@ -74,6 +75,9 @@ document.addEventListener('swiftbug-reporter-console', e => {
   // Use the BugReporterContent's addLogEntry method for proper filtering
   if (window.bugReporterContent) {
     window.bugReporterContent.addLogEntry(entry);
+  } else {
+    // Buffer the log entry if BugReporterContent is not ready yet
+    window.bugReporterPendingLogs.push(entry);
   }
 });
 
@@ -93,6 +97,18 @@ class BugReporterContent {
     this.maxLogEntries = window.swiftBugSettings.maxConsoleLines;
     this.setupErrorCapture();
     this.setupMessageListener();
+    this.processPendingLogs();
+  }
+
+  processPendingLogs() {
+    // Process any logs that were received before this instance was created
+    if (window.bugReporterPendingLogs && window.bugReporterPendingLogs.length > 0) {
+      window.bugReporterPendingLogs.forEach(entry => {
+        this.addLogEntry(entry);
+      });
+      // Clear the pending logs buffer
+      window.bugReporterPendingLogs = [];
+    }
   }
 
   setupErrorCapture() {
@@ -104,7 +120,7 @@ class BugReporterContent {
         message: `Uncaught Error: ${event.message} at ${event.filename}:${event.lineno}:${event.colno}`
       };
 
-      addLogEntry(logEntry);
+      this.addLogEntry(logEntry);
     });
 
     // Capture unhandled promise rejections
@@ -115,7 +131,7 @@ class BugReporterContent {
         message: `Unhandled Promise Rejection: ${event.reason}`
       };
 
-      addLogEntry(logEntry);
+      this.addLogEntry(logEntry);
     });
   }
 
