@@ -1,15 +1,40 @@
 // This script runs in the page context to intercept XMLHttpRequest and fetch calls
 (function() {
-  // Configuration
-  const MAX_NETWORK_REQUESTS = 50;
-  const MAX_BODY_SIZE = 10 * 1024; // 10KB
+  // Get settings from global window object (set by content script)
+  function getSettings() {
+    return window.swiftBugSettings || {
+      maxNetworkRequests: 50,
+      maxRequestBodySize: 10 * 1024, // 10KB
+      captureAllNetworkRequests: false,
+      ignoreStaticResources: true
+    };
+  }
+
+  // Configuration (will be updated from settings)
+  let MAX_BODY_SIZE = 10 * 1024; // 10KB
   const IGNORED_EXTENSIONS = ['.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg', '.woff', '.woff2', '.ttf', '.eot'];
 
-  // Global storage for network requests
-  window.bugReporterNetworkRequests = window.bugReporterNetworkRequests || [];
+  // Update configuration from settings
+  function updateConfig() {
+    const settings = getSettings();
+    MAX_BODY_SIZE = settings.maxRequestBodySize || (10 * 1024);
+  }
+
+  // Initial config update
+  updateConfig();
+
+  // Listen for settings changes
+  window.addEventListener('swiftbug-settings-updated', () => {
+    updateConfig();
+  });
 
   // Helper function to check if request should be ignored
   function shouldIgnoreRequest(url) {
+    const settings = getSettings();
+    if (!settings.ignoreStaticResources) {
+      return false;
+    }
+
     try {
       const urlObj = new URL(url);
       const pathname = urlObj.pathname.toLowerCase();
@@ -31,8 +56,8 @@
 
   // Helper function to check if request should be captured (only errors by default)
   function shouldCaptureRequest(requestData) {
-    // Get capture setting from window (can be set by extension settings)
-    const captureAllRequests = window.bugReporterCaptureAllRequests || false;
+    const settings = getSettings();
+    const captureAllRequests = settings.captureAllNetworkRequests || false;
 
     if (captureAllRequests) {
       return true; // Capture all requests if setting is enabled
@@ -62,14 +87,6 @@
     }
     if (requestData.responseBody) {
       requestData.responseBody = truncateData(requestData.responseBody, MAX_BODY_SIZE);
-    }
-
-    // Add to storage
-    window.bugReporterNetworkRequests.push(requestData);
-
-    // Maintain max size (remove oldest)
-    if (window.bugReporterNetworkRequests.length > MAX_NETWORK_REQUESTS) {
-      window.bugReporterNetworkRequests = window.bugReporterNetworkRequests.slice(-MAX_NETWORK_REQUESTS);
     }
 
     // Dispatch CustomEvent for extension (network)
@@ -243,7 +260,7 @@
     });
   };
 
-  // Expose function to get current network requests
+  // Expose function to get current network requests (for compatibility)
   window.getBugReporterNetworkRequests = function() {
     return window.bugReporterNetworkRequests || [];
   };

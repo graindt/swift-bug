@@ -1,13 +1,53 @@
-// Immediately start capturing console logs before anything else
-const originalConsole = {
-  log: console.log,
-  error: console.error,
-  warn: console.warn,
-  info: console.info,
-  debug: console.debug
+// Initialize global settings for page scripts
+window.swiftBugSettings = {
+  maxConsoleLines: 100,
+  maxNetworkRequests: 50,
+  maxRequestBodySize: 10 * 1024, // 10KB
+  captureAllNetworkRequests: false,
+  ignoreStaticResources: true,
+  consoleSerializationDepth: 3
 };
 
-// Inject page context console interceptor to forward page logs via postMessage
+// Load settings from chrome storage and update global settings
+chrome.storage.local.get(['settings'], result => {
+  const settings = result.settings || {};
+
+  // Update global settings object
+  window.swiftBugSettings = {
+    maxConsoleLines: settings.maxConsoleLines || 100,
+    maxNetworkRequests: settings.maxNetworkRequests || 50,
+    maxRequestBodySize: settings.maxRequestBodySize || (10 * 1024),
+    captureAllNetworkRequests: settings.captureAllNetworkRequests || false,
+    ignoreStaticResources: settings.ignoreStaticResources !== false,
+    consoleSerializationDepth: settings.consoleSerializationDepth || 3
+  };
+});
+
+// Function to update settings dynamically
+function updateSwiftBugSettings(newSettings) {
+  // Update global settings
+  window.swiftBugSettings = {
+    maxConsoleLines: newSettings.maxConsoleLines || 100,
+    maxNetworkRequests: newSettings.maxNetworkRequests || 50,
+    maxRequestBodySize: newSettings.maxRequestBodySize || (10 * 1024),
+    captureAllNetworkRequests: newSettings.captureAllNetworkRequests || false,
+    ignoreStaticResources: newSettings.ignoreStaticResources !== false,
+    consoleSerializationDepth: newSettings.consoleSerializationDepth || 3
+  };
+
+  // Dispatch event to notify injected scripts
+  window.dispatchEvent(new CustomEvent('swiftbug-settings-updated', {
+    detail: window.swiftBugSettings
+  }));
+}
+
+// Listen for settings changes from extension
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (namespace === 'local' && changes.settings) {
+    updateSwiftBugSettings(changes.settings.newValue || {});
+  }
+});
+
 // Inject page console interceptor script under CSP
 (function injectConsoleInterceptor() {
   const script = document.createElement('script');
@@ -18,27 +58,22 @@ const originalConsole = {
 
 // Inject network interceptor script with settings
 (function injectNetworkInterceptor() {
-  // Get settings from storage to configure network capture
-  chrome.storage.local.get(['settings'], (result) => {
-    const script = document.createElement('script');
-    script.src = chrome.runtime.getURL('content/networkInterceptor.js');
-    script.onload = () => script.remove();
-    document.documentElement.appendChild(script);
-  });
+  const script = document.createElement('script');
+  script.src = chrome.runtime.getURL('content/networkInterceptor.js');
+  script.onload = () => script.remove();
+  document.documentElement.appendChild(script);
 })();
 
 // Listen for forwarded page logs and network requests
 window.bugReporterCapturedLogs = [];
 window.bugReporterNetworkRequests = [];
-const maxLogEntries = 100;
-const maxNetworkRequests = 50;
 
 // Listen for CustomEvent from page console interceptor
 document.addEventListener('swiftbug-reporter-console', e => {
   const entry = e.detail;
-  window.bugReporterCapturedLogs.push(entry);
-  if (window.bugReporterCapturedLogs.length > maxLogEntries) {
-    window.bugReporterCapturedLogs = window.bugReporterCapturedLogs.slice(-maxLogEntries);
+  // Use the BugReporterContent's addLogEntry method for proper filtering
+  if (window.bugReporterContent) {
+    window.bugReporterContent.addLogEntry(entry);
   }
 });
 
@@ -46,8 +81,8 @@ document.addEventListener('swiftbug-reporter-console', e => {
 document.addEventListener('swiftbug-reporter-network', e => {
   const req = e.detail;
   window.bugReporterNetworkRequests.push(req);
-  if (window.bugReporterNetworkRequests.length > maxNetworkRequests) {
-    window.bugReporterNetworkRequests = window.bugReporterNetworkRequests.slice(-maxNetworkRequests);
+  if (window.bugReporterNetworkRequests.length > window.swiftBugSettings.maxNetworkRequests) {
+    window.bugReporterNetworkRequests = window.bugReporterNetworkRequests.slice(-window.swiftBugSettings.maxNetworkRequests);
   }
 });
 
@@ -55,7 +90,7 @@ document.addEventListener('swiftbug-reporter-network', e => {
 class BugReporterContent {
   constructor() {
     this.consoleLog = window.bugReporterCapturedLogs || [];
-    this.maxLogEntries = 100;
+    this.maxLogEntries = window.swiftBugSettings.maxConsoleLines;
     this.setupErrorCapture();
     this.setupMessageListener();
   }
@@ -93,8 +128,8 @@ class BugReporterContent {
     window.bugReporterCapturedLogs.push(logEntry);
 
     // Keep only the last N entries
-    if (window.bugReporterCapturedLogs.length > maxLogEntries) {
-      window.bugReporterCapturedLogs = window.bugReporterCapturedLogs.slice(-maxLogEntries);
+    if (window.bugReporterCapturedLogs.length > this.maxLogEntries) {
+      window.bugReporterCapturedLogs = window.bugReporterCapturedLogs.slice(-this.maxLogEntries);
     }
 
     // Update local reference
