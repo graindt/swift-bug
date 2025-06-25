@@ -147,6 +147,15 @@ src/
     └── utils.js
 ```
 
+## 控制台输出调试技巧
+
+如果你在内容脚本中劫持了 `console.log` 等方法，导致 DevTools 控制台输出的代码来源总是显示为拦截脚本（如 `consoleInterceptor.js`），可以在 DevTools 设置中将该脚本加入“ignore list”列表（Settings → Ignore List → Custom exclude rules），这样调试时控制台会自动跳过该脚本，显示原始业务代码的调用位置，配置如下 regex 规则。
+
+```
+/consoleInterceptor\.js$
+/networkInterceptor\.js$
+```
+
 ## 注意事项
 
 1. **隐私保护**: 确保敏感数据（如密码、token）不会被意外保存
