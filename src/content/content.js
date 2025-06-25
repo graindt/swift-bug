@@ -7,10 +7,6 @@ const originalConsole = {
   debug: console.debug
 };
 
-// Global storage for captured logs
-window.bugReporterCapturedLogs = [];
-const maxLogEntries = 100;
-
 // Inject page context console interceptor to forward page logs via postMessage
 // Inject page console interceptor script under CSP
 (function injectConsoleInterceptor() {
@@ -34,25 +30,24 @@ const maxLogEntries = 100;
 // Listen for forwarded page logs and network requests
 window.bugReporterCapturedLogs = [];
 window.bugReporterNetworkRequests = [];
+const maxLogEntries = 100;
 const maxNetworkRequests = 50;
 
-window.addEventListener('message', event => {
-  if (event.source === window && event.data) {
-    // Handle console logs
-    if (event.data.source === 'swiftbug-reporter') {
-      window.bugReporterCapturedLogs.push(event.data.logEntry);
-      if (window.bugReporterCapturedLogs.length > maxLogEntries) {
-        window.bugReporterCapturedLogs = window.bugReporterCapturedLogs.slice(-maxLogEntries);
-      }
-    }
+// Listen for CustomEvent from page console interceptor
+document.addEventListener('swiftbug-reporter-console', e => {
+  const entry = e.detail;
+  window.bugReporterCapturedLogs.push(entry);
+  if (window.bugReporterCapturedLogs.length > maxLogEntries) {
+    window.bugReporterCapturedLogs = window.bugReporterCapturedLogs.slice(-maxLogEntries);
+  }
+});
 
-    // Handle network requests
-    if (event.data.source === 'swiftbug-reporter-network') {
-      window.bugReporterNetworkRequests.push(event.data.networkRequest);
-      if (window.bugReporterNetworkRequests.length > maxNetworkRequests) {
-        window.bugReporterNetworkRequests = window.bugReporterNetworkRequests.slice(-maxNetworkRequests);
-      }
-    }
+// Listen for CustomEvent from page network interceptor
+document.addEventListener('swiftbug-reporter-network', e => {
+  const req = e.detail;
+  window.bugReporterNetworkRequests.push(req);
+  if (window.bugReporterNetworkRequests.length > maxNetworkRequests) {
+    window.bugReporterNetworkRequests = window.bugReporterNetworkRequests.slice(-maxNetworkRequests);
   }
 });
 

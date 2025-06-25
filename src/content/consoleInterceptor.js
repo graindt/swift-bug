@@ -91,7 +91,8 @@
           message: processed.join(' ')
         };
 
-        window.postMessage({ source: 'swiftbug-reporter', logEntry: entry }, '*');
+        // Dispatch CustomEvent for extension (avoids flooding DevTools)
+        document.dispatchEvent(new CustomEvent('swiftbug-reporter-console', { detail: entry }));
       } catch (e) {
         originalConsole.error('Log capture error:', e);
       } finally {

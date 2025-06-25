@@ -72,11 +72,8 @@
       window.bugReporterNetworkRequests = window.bugReporterNetworkRequests.slice(-MAX_NETWORK_REQUESTS);
     }
 
-    // Send to content script
-    window.postMessage({
-      source: 'swiftbug-reporter-network',
-      networkRequest: requestData
-    }, '*');
+    // Dispatch CustomEvent for extension (network)
+    document.dispatchEvent(new CustomEvent('swiftbug-reporter-network', { detail: requestData }));
   }
 
   // Intercept XMLHttpRequest
