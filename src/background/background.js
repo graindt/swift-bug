@@ -409,63 +409,105 @@ class BugReporterBackground {
 
   async injectBugData(bugData, tabId) {
     // Use the original report URL origin for setting cookies
-    const reportOrigin = new URL(bugData.url).origin;
-     // Restore cookies
-     if (bugData.cookies && bugData.cookies.length > 0) {
-       for (const cookie of bugData.cookies) {
-         try {
+    const reportUrl = new URL(bugData.url);
+    const reportOrigin = reportUrl.origin;
+
+    // Clear existing cookies for the domain first
+    try {
+      const existingCookies = await chrome.cookies.getAll({ url: bugData.url });
+      for (const cookie of existingCookies) {
+        await chrome.cookies.remove({
+          url: `${reportOrigin}${cookie.path}`,
+          name: cookie.name
+        });
+      }
+      console.log(`BugReporter: Cleared ${existingCookies.length} existing cookies`);
+    } catch (error) {
+      console.error('BugReporter: Error clearing existing cookies:', error);
+    }
+
+    // Clear existing storage data first
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        func: () => {
+          // Clear localStorage
+          try {
+            localStorage.clear();
+          } catch (error) {
+            console.error('Error clearing localStorage:', error);
+          }
+
+          // Clear sessionStorage
+          try {
+            sessionStorage.clear();
+          } catch (error) {
+            console.error('Error clearing sessionStorage:', error);
+          }
+        }
+      });
+      console.log('BugReporter: Cleared existing storage data');
+    } catch (error) {
+      console.error('BugReporter: Error clearing existing storage data:', error);
+    }
+
+    // Restore cookies
+    if (bugData.cookies && bugData.cookies.length > 0) {
+      for (const cookie of bugData.cookies) {
+        try {
           // Construct URL using report origin and cookie path
           const url = `${reportOrigin}${cookie.path}`;
-           await chrome.cookies.set({
-             url,
-             name: cookie.name,
-             value: cookie.value,
-             domain: cookie.domain,
-             path: cookie.path,
-             secure: cookie.secure,
-             httpOnly: cookie.httpOnly,
-             expirationDate: cookie.expirationDate
-           });
-         } catch (error) {
-           console.error('BugReporter: Error setting cookie:', error);
-         }
-       }
-     }
+          await chrome.cookies.set({
+            url,
+            name: cookie.name,
+            value: cookie.value,
+            domain: cookie.domain,
+            path: cookie.path,
+            secure: cookie.secure,
+            httpOnly: cookie.httpOnly,
+            expirationDate: cookie.expirationDate
+          });
+        } catch (error) {
+          console.error('BugReporter: Error setting cookie:', error);
+        }
+      }
+      console.log(`BugReporter: Restored ${bugData.cookies.length} cookies`);
+    }
 
-     // Inject storage data
-     try {
-       await chrome.scripting.executeScript({
-         target: { tabId },
-         func: (localStorageData, sessionStorageData) => {
-           // Restore localStorage
-           Object.entries(localStorageData).forEach(([key, value]) => {
-             try {
-               localStorage.setItem(key, value);
-             } catch (error) {
-               console.error('Error setting localStorage item:', error);
-             }
-           });
+    // Inject storage data
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        func: (localStorageData, sessionStorageData) => {
+          // Restore localStorage
+          Object.entries(localStorageData).forEach(([key, value]) => {
+            try {
+              localStorage.setItem(key, value);
+            } catch (error) {
+              console.error('Error setting localStorage item:', error);
+            }
+          });
 
-           // Restore sessionStorage
-           Object.entries(sessionStorageData).forEach(([key, value]) => {
-             try {
-               sessionStorage.setItem(key, value);
-             } catch (error) {
-               console.error('Error setting sessionStorage item:', error);
-             }
-           });
-         },
-         args: [bugData.localStorage || {}, bugData.sessionStorage || {}]
-       });
-       console.log('BugReporter: injectBugData: storage data injected for tab', tabId);
-     } catch (error) {
-       console.error('BugReporter: Error injecting storage data:', error);
-     }
+          // Restore sessionStorage
+          Object.entries(sessionStorageData).forEach(([key, value]) => {
+            try {
+              sessionStorage.setItem(key, value);
+            } catch (error) {
+              console.error('Error setting sessionStorage item:', error);
+            }
+          });
+        },
+        args: [bugData.localStorage || {}, bugData.sessionStorage || {}]
+      });
+      console.log('BugReporter: injectBugData: storage data injected for tab', tabId);
+    } catch (error) {
+      console.error('BugReporter: Error injecting storage data:', error);
+    }
 
-     // Refresh the page to apply all changes
-     await chrome.tabs.reload(tabId);
-     console.log('BugReporter: injectBugData: page reloaded for tab', tabId);
-   }
+    // Refresh the page to apply all changes
+    await chrome.tabs.reload(tabId);
+    console.log('BugReporter: injectBugData: page reloaded for tab', tabId);
+  }
 
   async importBugReport(bugData) {
     try {
