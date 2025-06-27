@@ -389,19 +389,41 @@ class BugReporterBackground {
       bugReports[reportId] = bugReport;
       await chrome.storage.local.set({ bugReports });
     }
-    // Navigate to the bug URL if different
+
+    // Check if hostname or port are different
+    const currentUrl = new URL(tab.url);
+    const bugUrl = new URL(bugData.url);
+    const isCrossDomain = currentUrl.hostname !== bugUrl.hostname || currentUrl.port !== bugUrl.port;
+
+    // Navigate to the bug URL
     if (tab.url !== bugData.url) {
-      await chrome.tabs.update(tab.id, { url: bugData.url });
-      // Wait for navigation to complete
-      return new Promise((resolve) => {
-        const listener = (tabId, changeInfo) => {
-          if (tabId === tab.id && changeInfo.status === 'complete') {
-            chrome.tabs.onUpdated.removeListener(listener);
-            setTimeout(() => this.injectBugData(bugData, tab.id).then(resolve), 1000);
-          }
-        };
-        chrome.tabs.onUpdated.addListener(listener);
-      });
+      if (isCrossDomain) {
+        // Open in new tab if different domain
+        const newTab = await chrome.tabs.create({ url: bugData.url, active: true });
+        // Wait for navigation to complete
+        return new Promise((resolve) => {
+          const listener = (tabId, changeInfo) => {
+            if (tabId === newTab.id && changeInfo.status === 'complete') {
+              chrome.tabs.onUpdated.removeListener(listener);
+              setTimeout(() => this.injectBugData(bugData, newTab.id).then(resolve), 1000);
+            }
+          };
+          chrome.tabs.onUpdated.addListener(listener);
+        });
+      } else {
+        // Navigate in current tab if same domain
+        await chrome.tabs.update(tab.id, { url: bugData.url });
+        // Wait for navigation to complete
+        return new Promise((resolve) => {
+          const listener = (tabId, changeInfo) => {
+            if (tabId === tab.id && changeInfo.status === 'complete') {
+              chrome.tabs.onUpdated.removeListener(listener);
+              setTimeout(() => this.injectBugData(bugData, tab.id).then(resolve), 1000);
+            }
+          };
+          chrome.tabs.onUpdated.addListener(listener);
+        });
+      }
     } else {
       return this.injectBugData(bugData, tab.id);
     }
@@ -504,9 +526,9 @@ class BugReporterBackground {
       console.error('BugReporter: Error injecting storage data:', error);
     }
 
-    // Refresh the page to apply all changes
-    await chrome.tabs.reload(tabId);
-    console.log('BugReporter: injectBugData: page reloaded for tab', tabId);
+    // Navigate to the bug URL to apply all changes
+    await chrome.tabs.update(tabId, { url: bugData.url });
+    console.log('BugReporter: injectBugData: navigated to bug URL for tab', tabId);
   }
 
   async importBugReport(bugData) {
