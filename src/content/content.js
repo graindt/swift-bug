@@ -358,53 +358,68 @@ class BugLinkDetector {
   }
 
   addViewButton(linkElement) {
-    // Create view button
-    const viewBtn = document.createElement('button');
+    // Create view button (span)
+    const viewBtn = document.createElement('span');
     viewBtn.className = 'bug-view-btn';
     viewBtn.textContent = '查看';
     viewBtn.title = '查看Bug详情';
+    viewBtn.tabIndex = 0;
+    viewBtn.setAttribute('role', 'button');
 
     // Add click handler
     viewBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      this.handleViewClick(linkElement);
+      this.handleViewClick(linkElement, viewBtn);
+    });
+    viewBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        e.stopPropagation();
+        this.handleViewClick(linkElement, viewBtn);
+      }
     });
 
-    // Create import button
-    const importBtn = document.createElement('button');
+    // Create import button (span)
+    const importBtn = document.createElement('span');
     importBtn.className = 'bug-import-btn';
     importBtn.textContent = '导入';
     importBtn.title = '导入Bug到插件';
+    importBtn.tabIndex = 0;
+    importBtn.setAttribute('role', 'button');
 
     // Add import click handler
     importBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      this.handleImportClick(linkElement);
+      this.handleImportClick(linkElement, importBtn);
+    });
+    importBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        e.stopPropagation();
+        this.handleImportClick(linkElement, importBtn);
+      }
     });
 
     // Insert buttons after the link
     linkElement.parentNode.insertBefore(viewBtn, linkElement.nextSibling);
-
     // Add a space between view and import button
     const space1 = document.createTextNode(' ');
     linkElement.parentNode.insertBefore(space1, viewBtn.nextSibling);
-
     linkElement.parentNode.insertBefore(importBtn, viewBtn.nextSibling.nextSibling);
-
     // Add a space between link and view button
     const space2 = document.createTextNode(' ');
     linkElement.parentNode.insertBefore(space2, viewBtn);
   }
 
-  async handleViewClick(linkElement) {
+  async handleViewClick(linkElement, viewBtn) {
     try {
       // Show loading state
-      const viewBtn = linkElement.nextSibling.nextSibling; // Skip text node
       const originalText = viewBtn.textContent;
       viewBtn.textContent = '加载中...';
-      viewBtn.disabled = true;
+      viewBtn.classList.add('disabled');
+      viewBtn.setAttribute('aria-disabled', 'true');
 
       // Fetch and parse the JSON file
       const bugData = await this.fetchBugReport(linkElement.href);
@@ -415,25 +430,25 @@ class BugLinkDetector {
 
       // Restore button state
       viewBtn.textContent = originalText;
-      viewBtn.disabled = false;
+      viewBtn.classList.remove('disabled');
+      viewBtn.setAttribute('aria-disabled', 'false');
     } catch (error) {
       console.error('Error loading bug report:', error);
       alert('加载Bug报告失败：' + error.message);
-
       // Restore button state
-      const viewBtn = linkElement.nextSibling.nextSibling;
       viewBtn.textContent = '查看';
-      viewBtn.disabled = false;
+      viewBtn.classList.remove('disabled');
+      viewBtn.setAttribute('aria-disabled', 'false');
     }
   }
 
-  async handleImportClick(linkElement) {
+  async handleImportClick(linkElement, importBtn) {
     try {
       // Show loading state
-      const importBtn = linkElement.nextSibling.nextSibling.nextSibling.nextSibling; // Skip text nodes and view button
       const originalText = importBtn.textContent;
       importBtn.textContent = '导入中...';
-      importBtn.disabled = true;
+      importBtn.classList.add('disabled');
+      importBtn.setAttribute('aria-disabled', 'true');
 
       // Fetch and parse the JSON file
       const bugData = await this.fetchBugReport(linkElement.href);
@@ -447,7 +462,8 @@ class BugLinkDetector {
         importBtn.textContent = '已导入';
         setTimeout(() => {
           importBtn.textContent = originalText;
-          importBtn.disabled = false;
+          importBtn.classList.remove('disabled');
+          importBtn.setAttribute('aria-disabled', 'false');
         }, 2000);
       } else {
         throw new Error(result.error);
@@ -455,11 +471,10 @@ class BugLinkDetector {
     } catch (error) {
       console.error('Error importing bug report:', error);
       this.showMessage('导入失败：' + error.message, 'error');
-
       // Restore button state
-      const importBtn = linkElement.nextSibling.nextSibling.nextSibling.nextSibling;
       importBtn.textContent = '导入';
-      importBtn.disabled = false;
+      importBtn.classList.remove('disabled');
+      importBtn.setAttribute('aria-disabled', 'false');
     }
   }
 

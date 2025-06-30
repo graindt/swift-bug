@@ -36,11 +36,10 @@
 }
 
 /* Bug View Button Styles */
-.bug-view-btn {
+.bug-view-btn, .bug-import-btn {
   display: inline-block;
   background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
   color: #fff;
-  border: none;
   border-radius: 20px;
   padding: 6px 12px;
   font-size: 12px;
@@ -51,60 +50,49 @@
   vertical-align: middle;
   margin-left: 8px;
   box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+  border: none;
+  user-select: none;
 }
 
-.bug-view-btn:hover {
+.bug-import-btn {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  margin-left: 4px;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+}
+
+.bug-view-btn:hover, .bug-view-btn:focus {
   background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
   box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
   transform: translateY(-1px);
 }
 
-.bug-view-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(40, 167, 69, 0.2);
-}
-
-.bug-view-btn:disabled {
-  background: #6c757d;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-/* Bug Import Button Styles */
-.bug-import-btn {
-  display: inline-block;
-  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-  color: #fff;
-  border: none;
-  border-radius: 20px;
-  padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  outline: none;
-  vertical-align: middle;
-  margin-left: 4px;
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
-}
-
-.bug-import-btn:hover {
+.bug-import-btn:hover, .bug-import-btn:focus {
   background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
   transform: translateY(-1px);
 }
 
-.bug-import-btn:active {
+.bug-view-btn:active, .bug-import-btn:active {
   transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(0, 123, 255, 0.2);
+  box-shadow: 0 2px 6px rgba(40, 167, 69, 0.2);
 }
 
-.bug-import-btn:disabled {
-  background: #6c757d;
+.bug-view-btn.disabled, .bug-import-btn.disabled {
+  background: #6c757d !important;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.bug-view-btn[aria-disabled="true"], .bug-import-btn[aria-disabled="true"] {
+  background: #6c757d !important;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  pointer-events: none;
+  opacity: 0.7;
 }
 
 /* Notification Styles */
