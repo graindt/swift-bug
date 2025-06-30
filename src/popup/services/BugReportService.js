@@ -79,6 +79,23 @@ export class BugReportService {
     }
   }
 
+  async deleteAllReports() {
+    try {
+      const response = await this.sendMessage({
+        action: 'deleteAllBugReports'
+      });
+
+      if (response.success) {
+        this.reports = []; // Clear local reports cache
+        return { success: true };
+      } else {
+        throw new Error(response.error);
+      }
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
   async restoreReport(report) {
     try {
       const response = await this.sendMessage({

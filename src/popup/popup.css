@@ -123,6 +123,17 @@ body {
   border-color: #ccc;
 }
 
+.btn-danger {
+  background: #dc3545;
+  color: white;
+  border: 1px solid #dc3545;
+}
+
+.btn-danger:hover {
+  background: #c82333;
+  border-color: #bd2130;
+}
+
 .btn-icon {
   font-size: 16px;
 }
@@ -168,12 +179,28 @@ body {
   color: #333;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .report-count {
   font-size: 12px;
   color: #666;
   background: #f1f3f4;
   padding: 4px 8px;
   border-radius: 12px;
+}
+
+.btn-small {
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.btn-small .btn-icon {
+  font-size: 14px;
 }
 
 .reports-container {
@@ -666,7 +693,7 @@ body {
   border-radius: 3px;
 }
 
-.bug-detail-body::-webkit-scrollbar-thumb,
+.bug-detail_body::-webkit-scrollbar-thumb,
 .storage-items::-webkit-scrollbar-thumb,
 .console-logs::-webkit-scrollbar-thumb {
   background: #c1c1c1;

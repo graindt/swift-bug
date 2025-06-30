@@ -35,6 +35,11 @@ class BugReporterBackground {
           sendResponse({ success: true });
           break;
 
+        case 'deleteAllBugReports':
+          await this.deleteAllBugReports();
+          sendResponse({ success: true });
+          break;
+
         case 'exportBugReport':
           await this.exportBugReport(message.reportId);
           sendResponse({ success: true });
@@ -340,6 +345,11 @@ class BugReporterBackground {
 
     delete bugReports[reportId];
     await chrome.storage.local.set({ bugReports });
+  }
+
+  async deleteAllBugReports() {
+    // Clear all bug reports from storage
+    await chrome.storage.local.set({ bugReports: {} });
   }
 
   async exportBugReport(reportId) {

@@ -15,6 +15,11 @@ export class EventHandler {
       this.popupManager.importBugReport();
     });
 
+    // Delete all button
+    document.getElementById('deleteAllBtn').addEventListener('click', () => {
+      this.popupManager.deleteAllReports();
+    });
+
     // Settings button
     document.getElementById('settingsBtn').addEventListener('click', () => {
       this.popupManager.openSettings();

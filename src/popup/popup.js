@@ -106,6 +106,43 @@ class BugReporterPopup {
     }
   }
 
+  async deleteAllReports() {
+    if (!confirm('确定要删除所有Bug报告吗？此操作不可恢复！')) {
+      return;
+    }
+
+    const deleteAllBtn = document.getElementById('deleteAllBtn');
+    const originalText = deleteAllBtn.innerHTML;
+
+    try {
+      // Show loading state
+      deleteAllBtn.innerHTML = '<span class="btn-icon">⏳</span>删除中...';
+      deleteAllBtn.disabled = true;
+
+      const result = await this.bugReportService.deleteAllReports();
+
+      if (result.success) {
+        showSuccess('所有Bug报告已删除');
+        await this.loadBugReports(); // Reload reports
+
+        // Show empty state
+        const container = document.getElementById('reportsContainer');
+        const emptyState = document.getElementById('emptyState');
+        const existingReports = container.querySelectorAll('.swiftbug-report-item');
+        existingReports.forEach(item => item.remove());
+        emptyState.style.display = 'block';
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      showError('删除失败: ' + error.message);
+    } finally {
+      // Restore button state
+      deleteAllBtn.innerHTML = originalText;
+      deleteAllBtn.disabled = false;
+    }
+  }
+
   async viewReport(reportId) {
     const report = this.bugReportService.getReportById(reportId);
     if (!report) {
