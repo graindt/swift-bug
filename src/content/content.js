@@ -587,15 +587,18 @@ class ContentModalManager {
     }
 
     let html = `
+      <!-- Basic Info Section -->
       <div class="bug-section">
         <div class="bug-section-title">
           <span class="bug-section-icon">📋</span>
           基本信息
         </div>
+
         <div class="bug-url">
           <div class="bug-url-label">页面地址</div>
           <div class="bug-url-value">${this.escapeHtml(report.url)}</div>
         </div>
+
         <div class="bug-info-grid">
           <div class="bug-info-item">
             <div class="bug-info-label">页面标题</div>
@@ -617,7 +620,39 @@ class ContentModalManager {
       </div>
     `;
 
-    // Add other sections similar to UIRenderer.js
+    html = html.trim();
+
+    // Viewport Section
+    if (report.viewport) {
+      html += `
+        <div class="bug-section">
+          <div class="bug-section-title">
+            <span class="bug-section-icon">📐</span>
+            视口信息
+          </div>
+          <div class="bug-info-grid">
+            <div class="bug-info-item">
+              <div class="bug-info-label">宽度</div>
+              <div class="bug-info-value">${report.viewport.width}px</div>
+            </div>
+            <div class="bug-info-item">
+              <div class="bug-info-label">高度</div>
+              <div class="bug-info-value">${report.viewport.height}px</div>
+            </div>
+            <div class="bug-info-item">
+              <div class="bug-info-label">水平滚动</div>
+              <div class="bug-info-value">${report.viewport.scrollX}px</div>
+            </div>
+            <div class="bug-info-item">
+              <div class="bug-info-label">垂直滚动</div>
+              <div class="bug-info-value">${report.viewport.scrollY}px</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Screenshot Section
     if (report.screenshot) {
       html += `
         <div class="bug-section">
@@ -672,6 +707,72 @@ class ContentModalManager {
       }
 
       html += '</div>';
+    }
+
+    // Cookies Section
+    if (report.cookies && report.cookies.length > 0) {
+      html += `
+        <div class="bug-section">
+          <div class="bug-section-title">
+            <span class="bug-section-icon">🍪</span>
+            Cookies
+            <span class="storage-count">${report.cookies.length}</span>
+          </div>
+          <div class="storage-items">
+            ${report.cookies.map(cookie => `
+              <div class="storage-item">
+                <div class="storage-key">${this.escapeHtml(cookie.name)}</div>
+                <div class="storage-value" title="Domain: ${this.escapeHtml(cookie.domain)}, Path: ${this.escapeHtml(cookie.path)}">${this.escapeHtml(this.truncateText(cookie.value, 100))}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // Network Requests Section
+    if (report.networkRequests && report.networkRequests.length > 0) {
+      html += `
+        <div class="bug-section">
+          <div class="bug-section-title">
+            <span class="bug-section-icon">🌐</span>
+            网络请求
+            <span class="storage-count">${report.networkRequests.length}</span>
+          </div>
+          <div class="network-requests">
+            ${report.networkRequests.map(request => {
+              const isError = request.status === 0 || request.status >= 400;
+              const statusClass = isError ? 'error' : 'success';
+              const method = request.method || 'GET';
+              const responseTime = request.responseTime ? `${request.responseTime}ms` : 'N/A';
+
+              return `
+                <div class="network-request-item">
+                  <div class="network-request-header">
+                    <span class="network-method ${method.toLowerCase()}">${method}</span>
+                    <span class="network-status ${statusClass}">${request.status || 0}</span>
+                    <span class="network-time">${responseTime}</span>
+                    <span class="network-type">${request.type}</span>
+                  </div>
+                  <div class="network-url" title="${this.escapeHtml(request.url)}">${this.escapeHtml(this.truncateText(request.url, 80))}</div>
+                  ${request.requestBody ? `
+                    <div class="network-body">
+                      <div class="network-body-label">请求体:</div>
+                      <div class="network-body-content">${this.escapeHtml(this.truncateText(request.requestBody, 200))}</div>
+                    </div>
+                  ` : ''}
+                  ${request.responseBody && request.responseBody !== '[Binary or Non-Text Response]' ? `
+                    <div class="network-body">
+                      <div class="network-body-label">响应体:</div>
+                      <div class="network-body-content">${this.escapeHtml(this.truncateText(request.responseBody, 200))}</div>
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
     }
 
     // Console logs
