@@ -575,10 +575,8 @@ body {
 }
 
 .storage-item {
-  padding: 8px 12px;
   border-bottom: 1px solid #f1f3f4;
   display: flex;
-  gap: 12px;
 }
 
 .storage-item:last-child {
@@ -586,14 +584,20 @@ body {
 }
 
 .storage-key {
+  background: #f8f9fa;
+  padding: 8px 12px;
   font-weight: 500;
-  color: #495057;
+  color: #333;
   min-width: 120px;
+  width: 33.3333%;
+  border-right: 1px solid #dee2e6;
+  word-break: break-all;
   font-size: 12px;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
 
 .storage-value {
+  padding: 8px 12px;
   color: #6c757d;
   font-size: 12px;
   word-break: break-word;
