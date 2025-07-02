@@ -195,6 +195,72 @@ export class UIRenderer {
       `;
     }
 
+    // Network Requests Section
+    if (report.networkRequests && report.networkRequests.length > 0) {
+      html += `
+        <div class="bug-section">
+          <div class="bug-section-title">
+            <span class="bug-section-icon">🌐</span>
+            网络请求
+            <span class="storage-count">${report.networkRequests.length}</span>
+          </div>
+          <div class="network-requests">
+            ${report.networkRequests.map(request => {
+              const isError = request.status === 0 || request.status >= 400;
+              const statusClass = isError ? 'error' : 'success';
+              const method = request.method || 'GET';
+              const responseTime = request.responseTime ? `${request.responseTime}ms` : 'N/A';
+
+              return `
+                <div class="network-request-item">
+                  <div class="network-request-header">
+                    <span class="network-method ${method.toLowerCase()}">${method}</span>
+                    <span class="network-status ${statusClass}">${request.status || 0}</span>
+                    <span class="network-time">${responseTime}</span>
+                    <span class="network-type">${request.type}</span>
+                  </div>
+                  <div class="network-url" title="${escapeHtml(request.url)}">${escapeHtml(truncateText(request.url, 80))}</div>
+                  ${request.requestBody ? `
+                    <div class="network-body">
+                      <div class="network-body-label">请求体:</div>
+                      <div class="network-body-content">${escapeHtml(truncateText(request.requestBody, 200))}</div>
+                    </div>
+                  ` : ''}
+                  ${request.responseBody && request.responseBody !== '[Binary or Non-Text Response]' ? `
+                    <div class="network-body">
+                      <div class="network-body-label">响应体:</div>
+                      <div class="network-body-content">${escapeHtml(truncateText(request.responseBody, 200))}</div>
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // Console Logs Section
+    if (report.consoleLog && report.consoleLog.length > 0) {
+      html += `
+        <div class="bug-section">
+          <div class="bug-section-title">
+            <span class="bug-section-icon">🖥️</span>
+            控制台日志
+            <span class="storage-count">${report.consoleLog.length}</span>
+          </div>
+          <div class="console-logs">
+            ${report.consoleLog.map(log => `
+              <div class="console-log-item">
+                <span class="console-log-level ${log.level || 'log'}">${log.level || 'log'}</span>
+                ${escapeHtml(log.message || log.toString())}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
     // Storage Section
     const hasLocalStorage = report.localStorage && Object.keys(report.localStorage).length > 0;
     const hasSessionStorage = report.sessionStorage && Object.keys(report.sessionStorage).length > 0;
@@ -263,72 +329,6 @@ export class UIRenderer {
               <div class="storage-item">
                 <div class="storage-key">${escapeHtml(cookie.name)}</div>
                 <div class="storage-value" title="Domain: ${escapeHtml(cookie.domain)}, Path: ${escapeHtml(cookie.path)}">${escapeHtml(truncateText(cookie.value, 100))}</div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
-    }
-
-    // Network Requests Section
-    if (report.networkRequests && report.networkRequests.length > 0) {
-      html += `
-        <div class="bug-section">
-          <div class="bug-section-title">
-            <span class="bug-section-icon">🌐</span>
-            网络请求
-            <span class="storage-count">${report.networkRequests.length}</span>
-          </div>
-          <div class="network-requests">
-            ${report.networkRequests.map(request => {
-              const isError = request.status === 0 || request.status >= 400;
-              const statusClass = isError ? 'error' : 'success';
-              const method = request.method || 'GET';
-              const responseTime = request.responseTime ? `${request.responseTime}ms` : 'N/A';
-
-              return `
-                <div class="network-request-item">
-                  <div class="network-request-header">
-                    <span class="network-method ${method.toLowerCase()}">${method}</span>
-                    <span class="network-status ${statusClass}">${request.status || 0}</span>
-                    <span class="network-time">${responseTime}</span>
-                    <span class="network-type">${request.type}</span>
-                  </div>
-                  <div class="network-url" title="${escapeHtml(request.url)}">${escapeHtml(truncateText(request.url, 80))}</div>
-                  ${request.requestBody ? `
-                    <div class="network-body">
-                      <div class="network-body-label">请求体:</div>
-                      <div class="network-body-content">${escapeHtml(truncateText(request.requestBody, 200))}</div>
-                    </div>
-                  ` : ''}
-                  ${request.responseBody && request.responseBody !== '[Binary or Non-Text Response]' ? `
-                    <div class="network-body">
-                      <div class="network-body-label">响应体:</div>
-                      <div class="network-body-content">${escapeHtml(truncateText(request.responseBody, 200))}</div>
-                    </div>
-                  ` : ''}
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-      `;
-    }
-
-    // Console Logs Section
-    if (report.consoleLog && report.consoleLog.length > 0) {
-      html += `
-        <div class="bug-section">
-          <div class="bug-section-title">
-            <span class="bug-section-icon">🖥️</span>
-            控制台日志
-            <span class="storage-count">${report.consoleLog.length}</span>
-          </div>
-          <div class="console-logs">
-            ${report.consoleLog.map(log => `
-              <div class="console-log-item">
-                <span class="console-log-level ${log.level || 'log'}">${log.level || 'log'}</span>
-                ${escapeHtml(log.message || log.toString())}
               </div>
             `).join('')}
           </div>

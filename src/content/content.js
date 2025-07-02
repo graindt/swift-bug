@@ -667,69 +667,6 @@ class ContentModalManager {
       `;
     }
 
-    // Storage sections
-    const hasLocalStorage = report.localStorage && Object.keys(report.localStorage).length > 0;
-    const hasSessionStorage = report.sessionStorage && Object.keys(report.sessionStorage).length > 0;
-
-    if (hasLocalStorage || hasSessionStorage) {
-      html += `<div class="bug-section"><div class="bug-section-title"><span class="bug-section-icon">💾</span>浏览器存储</div>`;
-
-      if (hasLocalStorage) {
-        html += `
-          <div class="storage-section">
-            <div class="storage-title">📦 LocalStorage <span class="storage-count">${Object.keys(report.localStorage).length}</span></div>
-            <div class="storage-items">
-              ${Object.entries(report.localStorage).map(([key, value]) => `
-                <div class="storage-item">
-                  <div class="storage-key">${this.escapeHtml(key)}</div>
-                  <div class="storage-value">${this.escapeHtml(this.truncateText(value, 200))}</div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
-      }
-
-      if (hasSessionStorage) {
-        html += `
-          <div class="storage-section">
-            <div class="storage-title">🔒 SessionStorage <span class="storage-count">${Object.keys(report.sessionStorage).length}</span></div>
-            <div class="storage-items">
-              ${Object.entries(report.sessionStorage).map(([key, value]) => `
-                <div class="storage-item">
-                  <div class="storage-key">${this.escapeHtml(key)}</div>
-                  <div class="storage-value">${this.escapeHtml(this.truncateText(value, 200))}</div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
-      }
-
-      html += '</div>';
-    }
-
-    // Cookies Section
-    if (report.cookies && report.cookies.length > 0) {
-      html += `
-        <div class="bug-section">
-          <div class="bug-section-title">
-            <span class="bug-section-icon">🍪</span>
-            Cookies
-            <span class="storage-count">${report.cookies.length}</span>
-          </div>
-          <div class="storage-items">
-            ${report.cookies.map(cookie => `
-              <div class="storage-item">
-                <div class="storage-key">${this.escapeHtml(cookie.name)}</div>
-                <div class="storage-value" title="Domain: ${this.escapeHtml(cookie.domain)}, Path: ${this.escapeHtml(cookie.path)}">${this.escapeHtml(this.truncateText(cookie.value, 100))}</div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
-    }
-
     // Network Requests Section
     if (report.networkRequests && report.networkRequests.length > 0) {
       html += `
@@ -789,6 +726,69 @@ class ContentModalManager {
               <div class="console-log-item">
                 <span class="console-log-level ${log.level || 'log'}">${log.level || 'log'}</span>
                 ${this.escapeHtml(log.message || log.toString())}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // Storage sections
+    const hasLocalStorage = report.localStorage && Object.keys(report.localStorage).length > 0;
+    const hasSessionStorage = report.sessionStorage && Object.keys(report.sessionStorage).length > 0;
+
+    if (hasLocalStorage || hasSessionStorage) {
+      html += `<div class="bug-section"><div class="bug-section-title"><span class="bug-section-icon">💾</span>浏览器存储</div>`;
+
+      if (hasLocalStorage) {
+        html += `
+          <div class="storage-section">
+            <div class="storage-title">📦 LocalStorage <span class="storage-count">${Object.keys(report.localStorage).length}</span></div>
+            <div class="storage-items">
+              ${Object.entries(report.localStorage).map(([key, value]) => `
+                <div class="storage-item">
+                  <div class="storage-key">${this.escapeHtml(key)}</div>
+                  <div class="storage-value">${this.escapeHtml(this.truncateText(value, 200))}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      if (hasSessionStorage) {
+        html += `
+          <div class="storage-section">
+            <div class="storage-title">🔒 SessionStorage <span class="storage-count">${Object.keys(report.sessionStorage).length}</span></div>
+            <div class="storage-items">
+              ${Object.entries(report.sessionStorage).map(([key, value]) => `
+                <div class="storage-item">
+                  <div class="storage-key">${this.escapeHtml(key)}</div>
+                  <div class="storage-value">${this.escapeHtml(this.truncateText(value, 200))}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      html += '</div>';
+    }
+
+    // Cookies Section
+    if (report.cookies && report.cookies.length > 0) {
+      html += `
+        <div class="bug-section">
+          <div class="bug-section-title">
+            <span class="bug-section-icon">🍪</span>
+            Cookies
+            <span class="storage-count">${report.cookies.length}</span>
+          </div>
+          <div class="storage-items">
+            ${report.cookies.map(cookie => `
+              <div class="storage-item">
+                <div class="storage-key">${this.escapeHtml(cookie.name)}</div>
+                <div class="storage-value" title="Domain: ${this.escapeHtml(cookie.domain)}, Path: ${this.escapeHtml(cookie.path)}">${this.escapeHtml(this.truncateText(cookie.value, 100))}</div>
               </div>
             `).join('')}
           </div>
