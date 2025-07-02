@@ -26,7 +26,7 @@ class BugReporterOptions {
         ignoreStaticResources: true
       };
     } catch (error) {
-      console.error('BugReporter: Error loading settings:', error);
+      console.error('[SwiftBug]: Error loading settings:', error);
       this.showError('加载设置失败: ' + error.message);
     }
   }
@@ -115,7 +115,7 @@ class BugReporterOptions {
       }
 
     } catch (error) {
-      console.error('BugReporter: Error calculating storage usage:', error);
+      console.error('[SwiftBug]: Error calculating storage usage:', error);
       document.getElementById('storageText').textContent = '无法计算存储使用情况';
     }
   }

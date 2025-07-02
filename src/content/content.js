@@ -70,7 +70,7 @@ window.bugReporterNetworkRequests = [];
 window.bugReporterPendingLogs = []; // Buffer for logs received before BugReporterContent is ready
 
 // Listen for CustomEvent from page console interceptor
-document.addEventListener('swiftbug-reporter-console', e => {
+document.addEventListener('swiftbug-event-console', e => {
   const entry = e.detail;
   // Use the BugReporterContent's addLogEntry method for proper filtering
   if (window.bugReporterContent) {
@@ -82,7 +82,7 @@ document.addEventListener('swiftbug-reporter-console', e => {
 });
 
 // Listen for CustomEvent from page network interceptor
-document.addEventListener('swiftbug-reporter-network', e => {
+document.addEventListener('swiftbug-event-network', e => {
   const req = e.detail;
   window.bugReporterNetworkRequests.push(req);
   if (window.bugReporterNetworkRequests.length > window.swiftBugSettings.maxNetworkRequests) {
@@ -157,7 +157,7 @@ class BugReporterContent {
     const extensionPatterns = [
       'Bug Reporter',
       'BugReporter',
-      'bugReporter',
+      '[SwiftBug]',
       'Chrome Bug Reporter',
       'Content Script Loaded',
       'Error accessing localStorage',
@@ -218,7 +218,7 @@ class BugReporterContent {
         data.localStorage[key] = localStorage.getItem(key);
       }
     } catch (error) {
-      console.error('BugReporter: Error accessing localStorage:', error);
+      console.error('[SwiftBug]: Error accessing localStorage:', error);
     }
 
     // Collect sessionStorage
@@ -228,7 +228,7 @@ class BugReporterContent {
         data.sessionStorage[key] = sessionStorage.getItem(key);
       }
     } catch (error) {
-      console.error('BugReporter: Error accessing sessionStorage:', error);
+      console.error('[SwiftBug]: Error accessing sessionStorage:', error);
     }
 
     return data;
@@ -241,7 +241,7 @@ class BugReporterContent {
       localStorage.clear();
       sessionStorage.clear();
     } catch (error) {
-      console.error('BugReporter: Error clearing storage:', error);
+      console.error('[SwiftBug]: Error clearing storage:', error);
     }
 
     // Restore localStorage
@@ -249,7 +249,7 @@ class BugReporterContent {
       try {
         localStorage.setItem(key, value);
       } catch (error) {
-        console.error('BugReporter: Error setting localStorage item:', key, error);
+        console.error('[SwiftBug]: Error setting localStorage item:', key, error);
       }
     });
 
@@ -258,7 +258,7 @@ class BugReporterContent {
       try {
         sessionStorage.setItem(key, value);
       } catch (error) {
-        console.error('BugReporter: Error setting sessionStorage item:', key, error);
+        console.error('[SwiftBug]: Error setting sessionStorage item:', key, error);
       }
     });
 
@@ -289,7 +289,7 @@ window.bugReporterContent = bugReporterContent;
 window.bugReporterContentLoaded = true;
 
 // Debug log
-console.log('BugReporter: Content Script Loaded', bugReporterContent.getPageState());
+console.log('[SwiftBug]: Content Script Loaded', bugReporterContent.getPageState());
 
 // Bug Link Detector - Detects swiftbug-report JSON links and adds view buttons
 class BugLinkDetector {

@@ -75,7 +75,7 @@ class BugReporterBackground {
             const bugReportData = await this.fetchBugReportFromUrl(message.url);
             sendResponse({ success: true, data: bugReportData });
           } catch (error) {
-            console.error('BugReporter: Error fetching bug report from URL:', error);
+            console.error('[SwiftBug]: Error fetching bug report from URL:', error);
             sendResponse({ success: false, error: error.message });
           }
           break;
@@ -85,7 +85,7 @@ class BugReporterBackground {
             const importResult = await this.importBugReport(message.data);
             sendResponse({ success: true, data: importResult });
           } catch (error) {
-            console.error('BugReporter: Error importing bug report:', error);
+            console.error('[SwiftBug]: Error importing bug report:', error);
             sendResponse({ success: false, error: error.message });
           }
           break;
@@ -94,7 +94,7 @@ class BugReporterBackground {
           sendResponse({ success: false, error: 'Unknown action' });
       }
     } catch (error) {
-      console.error('BugReporter: Background script error:', error);
+      console.error('[SwiftBug]: Background script error:', error);
       sendResponse({ success: false, error: error.message });
     }
   }
@@ -148,7 +148,7 @@ class BugReporterBackground {
       const resultSettings = await chrome.storage.local.get(['settings']);
       settings = resultSettings.settings || {};
     } catch (error) {
-      console.error('BugReporter: Error retrieving settings:', error);
+      console.error('[SwiftBug]: Error retrieving settings:', error);
       settings = {};
     }
 
@@ -163,7 +163,7 @@ class BugReporterBackground {
         pageData.url = results[0].result; // This includes the hash
       }
     } catch (error) {
-      console.error('BugReporter: Error getting complete URL with hash:', error);
+      console.error('[SwiftBug]: Error getting complete URL with hash:', error);
       // Fall back to tab.url if injection fails
     }
 
@@ -186,7 +186,7 @@ class BugReporterBackground {
       pageData.cookies = uniqueCookies;
       console.log(`BugReporter: Collected ${uniqueCookies.length} cookies for ${url.hostname}`);
     } catch (error) {
-      console.error('BugReporter: Error collecting cookies:', error);
+      console.error('[SwiftBug]: Error collecting cookies:', error);
       pageData.cookies = [];
     }
 
@@ -208,7 +208,7 @@ class BugReporterBackground {
         console.log(`BugReporter: Collected ${networkData.networkRequests.length} network requests`, networkData.networkRequests);
       } else {
         pageData.networkRequests = [];
-        console.log('BugReporter: No network requests found, networkData:', networkData);
+        console.log('[SwiftBug]: No network requests found, networkData:', networkData);
       }
 
       // Inject script to collect storage data (localStorage/sessionStorage)
@@ -248,7 +248,7 @@ class BugReporterBackground {
         Object.assign(pageData, results[0].result);
       }
     } catch (error) {
-      console.error('BugReporter: Error collecting storage data:', error);
+      console.error('[SwiftBug]: Error collecting storage data:', error);
       pageData.localStorage = {};
       pageData.sessionStorage = {};
       pageData.consoleLog = [];
@@ -272,7 +272,7 @@ class BugReporterBackground {
         pageData.viewport = results[0].result;
       }
     } catch (error) {
-      console.error('BugReporter: Error collecting viewport info:', error);
+      console.error('[SwiftBug]: Error collecting viewport info:', error);
       pageData.viewport = {};
     }
 
@@ -282,7 +282,7 @@ class BugReporterBackground {
         const screenshot = await chrome.tabs.captureVisibleTab(tab.windowId, { format: 'png' });
         pageData.screenshot = screenshot;
       } catch (error) {
-        console.error('BugReporter: Error taking screenshot:', error);
+        console.error('[SwiftBug]: Error taking screenshot:', error);
         pageData.screenshot = null;
       }
     } else {
@@ -455,7 +455,7 @@ class BugReporterBackground {
       }
       console.log(`BugReporter: Cleared ${existingCookies.length} existing cookies`);
     } catch (error) {
-      console.error('BugReporter: Error clearing existing cookies:', error);
+      console.error('[SwiftBug]: Error clearing existing cookies:', error);
     }
 
     // Clear existing storage data first
@@ -478,9 +478,9 @@ class BugReporterBackground {
           }
         }
       });
-      console.log('BugReporter: Cleared existing storage data');
+      console.log('[SwiftBug]: Cleared existing storage data');
     } catch (error) {
-      console.error('BugReporter: Error clearing existing storage data:', error);
+      console.error('[SwiftBug]: Error clearing existing storage data:', error);
     }
 
     // Restore cookies
@@ -500,7 +500,7 @@ class BugReporterBackground {
             expirationDate: cookie.expirationDate
           });
         } catch (error) {
-          console.error('BugReporter: Error setting cookie:', error);
+          console.error('[SwiftBug]: Error setting cookie:', error);
         }
       }
       console.log(`BugReporter: Restored ${bugData.cookies.length} cookies`);
@@ -531,19 +531,19 @@ class BugReporterBackground {
         },
         args: [bugData.localStorage || {}, bugData.sessionStorage || {}]
       });
-      console.log('BugReporter: injectBugData: storage data injected for tab', tabId);
+      console.log('[SwiftBug]: injectBugData: storage data injected for tab', tabId);
     } catch (error) {
-      console.error('BugReporter: Error injecting storage data:', error);
+      console.error('[SwiftBug]: Error injecting storage data:', error);
     }
 
     // Navigate to the bug URL to apply all changes
     await chrome.tabs.update(tabId, { url: bugData.url });
-    console.log('BugReporter: injectBugData: navigated to bug URL for tab', tabId);
+    console.log('[SwiftBug]: injectBugData: navigated to bug URL for tab', tabId);
   }
 
   async importBugReport(bugData) {
     try {
-      console.log('BugReporter: Importing bug report:', bugData.id || 'unnamed');
+      console.log('[SwiftBug]: Importing bug report:', bugData.id || 'unnamed');
 
       // Validate bug data format
       if (!bugData.url || !bugData.timestamp) {
@@ -576,7 +576,7 @@ class BugReporterBackground {
 
       // Check if report already exists
       if (bugReports[reportId]) {
-        console.log('BugReporter: Report already exists, updating...');
+        console.log('[SwiftBug]: Report already exists, updating...');
       }
 
       // Add/update report
@@ -598,11 +598,11 @@ class BugReporterBackground {
       // Save updated reports
       await chrome.storage.local.set({ bugReports });
 
-      console.log('BugReporter: Bug report imported successfully:', reportId);
+      console.log('[SwiftBug]: Bug report imported successfully:', reportId);
       return { id: reportId, imported: true };
 
     } catch (error) {
-      console.error('BugReporter: Error importing bug report:', error);
+      console.error('[SwiftBug]: Error importing bug report:', error);
       throw error;
     }
   }
@@ -612,10 +612,10 @@ class BugReporterBackground {
       // Cache lookup
       const { bugReportCache = {} } = await chrome.storage.local.get(['bugReportCache']);
       if (bugReportCache[url]) {
-        console.log('BugReporter: Returning cached bug report for URL:', url);
+        console.log('[SwiftBug]: Returning cached bug report for URL:', url);
         return bugReportCache[url].data;
       }
-      console.log('BugReporter: Fetching bug report from URL:', url);
+      console.log('[SwiftBug]: Fetching bug report from URL:', url);
 
        // Fetch the JSON file
       const response = await fetch(url);
@@ -627,17 +627,17 @@ class BugReporterBackground {
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         // Try to parse as JSON anyway, in case the server doesn't set correct content-type
-        console.warn('BugReporter: Content-Type is not application/json, but attempting to parse as JSON');
+        console.warn('[SwiftBug]: Content-Type is not application/json, but attempting to parse as JSON');
       }
 
       const jsonData = await response.json();
       let reportData;
       // Check if this is an exported bug report format
       if (jsonData.report) {
-        console.log('BugReporter: Found exported bug report format');
+        console.log('[SwiftBug]: Found exported bug report format');
         reportData = jsonData.report;
       } else if (jsonData.url && jsonData.timestamp) {
-        console.log('BugReporter: Found direct bug report format');
+        console.log('[SwiftBug]: Found direct bug report format');
         reportData = jsonData;
       } else {
         throw new Error('不是有效的Bug报告格式');
@@ -655,7 +655,7 @@ class BugReporterBackground {
       await chrome.storage.local.set({ bugReportCache });
       return reportData;
     } catch (error) {
-      console.error('BugReporter: Error fetching bug report:', error);
+      console.error('[SwiftBug]: Error fetching bug report:', error);
 
       if (error instanceof TypeError && error.message.includes('fetch')) {
         throw new Error('无法访问该URL，请检查网络连接');

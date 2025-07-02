@@ -64,20 +64,24 @@
     }
 
     // By default, only capture failed requests
-    return requestData.status === 0 || // Network error
+    const result = requestData.status === 0 || // Network error
            requestData.status >= 400 || // HTTP error (4xx, 5xx)
            requestData.statusText === 'Network Error';
+    console.log('[SwiftBug][shouldCaptureRequest]', requestData.url, 'status:', requestData.status, 'statusText:', requestData.statusText, '=>', result);
+    return result;
   }
 
   // Helper function to add network request
   function addNetworkRequest(requestData) {
     // Skip if should be ignored
     if (shouldIgnoreRequest(requestData.url)) {
+      console.log('[SwiftBug][addNetworkRequest] Ignored:', requestData.url);
       return;
     }
 
     // Only capture if it's an error request (by default)
     if (!shouldCaptureRequest(requestData)) {
+      console.log('[SwiftBug][addNetworkRequest] Not captured:', requestData.url, 'status:', requestData.status);
       return;
     }
 
@@ -89,8 +93,9 @@
       requestData.responseBody = truncateData(requestData.responseBody, MAX_BODY_SIZE);
     }
 
+    console.log('[SwiftBug][addNetworkRequest] Captured:', requestData.url, 'status:', requestData.status);
     // Dispatch CustomEvent for extension (network)
-    document.dispatchEvent(new CustomEvent('swiftbug-reporter-network', { detail: requestData }));
+    document.dispatchEvent(new CustomEvent('swiftbug-event-network', { detail: requestData }));
   }
 
   // Intercept XMLHttpRequest
@@ -265,5 +270,5 @@
     return window.bugReporterNetworkRequests || [];
   };
 
-  console.log('BugReporter: Network interceptor loaded');
+  console.log('[SwiftBug]: Network interceptor loaded');
 })();
