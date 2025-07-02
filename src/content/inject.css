@@ -313,6 +313,8 @@
 }
 
 .storage-items {
+  max-height: 200px;
+  overflow-y: auto;
   background: #fff;
   border-radius: 6px;
   border: 1px solid #dee2e6;

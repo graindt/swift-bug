@@ -691,17 +691,17 @@ class ContentModalManager {
                     <span class="network-time">${responseTime}</span>
                     <span class="network-type">${request.type}</span>
                   </div>
-                  <div class="network-url" title="${this.escapeHtml(request.url)}">${this.escapeHtml(this.truncateText(request.url, 80))}</div>
+                  <div class="network-url" title="${this.escapeHtml(request.url)}">${this.escapeHtml(request.url)}</div>
                   ${request.requestBody ? `
                     <div class="network-body">
                       <div class="network-body-label">请求体:</div>
-                      <div class="network-body-content">${this.escapeHtml(this.truncateText(request.requestBody, 200))}</div>
+                      <div class="network-body-content">${this.escapeHtml(request.requestBody)}</div>
                     </div>
                   ` : ''}
                   ${request.responseBody && request.responseBody !== '[Binary or Non-Text Response]' ? `
                     <div class="network-body">
                       <div class="network-body-label">响应体:</div>
-                      <div class="network-body-content">${this.escapeHtml(this.truncateText(request.responseBody, 200))}</div>
+                      <div class="network-body-content">${this.escapeHtml(request.responseBody)}</div>
                     </div>
                   ` : ''}
                 </div>

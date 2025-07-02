@@ -219,17 +219,17 @@ export class UIRenderer {
                     <span class="network-time">${responseTime}</span>
                     <span class="network-type">${request.type}</span>
                   </div>
-                  <div class="network-url" title="${escapeHtml(request.url)}">${escapeHtml(truncateText(request.url, 80))}</div>
+                  <div class="network-url" title="${escapeHtml(request.url)}">${escapeHtml(request.url)}</div>
                   ${request.requestBody ? `
                     <div class="network-body">
                       <div class="network-body-label">请求体:</div>
-                      <div class="network-body-content">${escapeHtml(truncateText(request.requestBody, 200))}</div>
+                      <div class="network-body-content">${escapeHtml(request.requestBody)}</div>
                     </div>
                   ` : ''}
                   ${request.responseBody && request.responseBody !== '[Binary or Non-Text Response]' ? `
                     <div class="network-body">
                       <div class="network-body-label">响应体:</div>
-                      <div class="network-body-content">${escapeHtml(truncateText(request.responseBody, 200))}</div>
+                      <div class="network-body-content">${escapeHtml(request.responseBody)}</div>
                     </div>
                   ` : ''}
                 </div>
