@@ -125,7 +125,11 @@ class BugReportManager {
         cookies: bugData.cookies || [],
         consoleLog: bugData.consoleLog || [],
         networkRequests: bugData.networkRequests || [],
-        screenshot: bugData.screenshot || null
+        screenshot: bugData.screenshot || null,
+        viewport: bugData.viewport || null,
+        sourceUrl: bugData.sourceUrl || null,
+        sourceTitle: bugData.sourceTitle || null,
+        importedAt: bugData.importedAt || null
       };
 
       // Get current reports and settings
