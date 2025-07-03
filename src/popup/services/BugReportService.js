@@ -113,6 +113,23 @@ export class BugReportService {
     }
   }
 
+  async restoreReportToLocal(report) {
+    try {
+      const response = await this.sendMessage({
+        action: 'restoreBugDataToLocal',
+        data: report
+      });
+
+      if (response.success) {
+        return { success: true };
+      } else {
+        throw new Error(response.error);
+      }
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
   getReportById(reportId) {
     return this.reports.find(r => r.id === reportId);
   }

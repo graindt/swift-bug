@@ -23,7 +23,8 @@ class BugReporterOptions {
         maxConsoleLines: 100,
         maxNetworkRequests: 50,
         maxRequestBodySize: 10240,
-        ignoreStaticResources: true
+        ignoreStaticResources: true,
+        localhostEndpoint: 'http://localhost:8080'
       };
     } catch (error) {
       console.error('[SwiftBug]: Error loading settings:', error);
@@ -85,6 +86,7 @@ class BugReporterOptions {
     document.getElementById('maxStoredReports').value = this.settings.maxStoredReports;
     document.getElementById('maxNetworkRequests').value = this.settings.maxNetworkRequests || 50;
     document.getElementById('maxRequestBodySize').value = Math.round((this.settings.maxRequestBodySize || 10240) / 1024);
+    document.getElementById('localhostEndpoint').value = this.settings.localhostEndpoint || '';
   }
 
   async updateStorageInfo() {
@@ -137,7 +139,8 @@ class BugReporterOptions {
         maxConsoleLines: parseInt(document.getElementById('maxConsoleLines').value),
         maxStoredReports: parseInt(document.getElementById('maxStoredReports').value),
         maxNetworkRequests: parseInt(document.getElementById('maxNetworkRequests').value),
-        maxRequestBodySize: parseInt(document.getElementById('maxRequestBodySize').value) * 1024 // Convert KB to bytes
+        maxRequestBodySize: parseInt(document.getElementById('maxRequestBodySize').value) * 1024, // Convert KB to bytes
+        localhostEndpoint: document.getElementById('localhostEndpoint').value.trim()
       };
 
       // Validate settings
@@ -186,7 +189,8 @@ class BugReporterOptions {
         maxConsoleLines: 100,
         maxNetworkRequests: 50,
         maxRequestBodySize: 10240,
-        ignoreStaticResources: true
+        ignoreStaticResources: true,
+        localhostEndpoint: ''
       };
 
       await chrome.storage.local.set({ settings: defaultSettings });

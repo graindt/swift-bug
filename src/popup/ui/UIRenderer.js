@@ -57,6 +57,7 @@ export class UIRenderer {
         <button class="btn btn-small btn-export" data-action="export" data-id="${report.id}">导出</button>
         <button class="btn btn-small btn-delete" data-action="delete" data-id="${report.id}">删除</button>
         <button class="btn btn-small btn-restore" data-action="restore" data-id="${report.id}">还原</button>
+        <button class="btn btn-small btn-restore-local" data-action="restore-local" data-id="${report.id}">还原为Local</button>
       </div>
     `;
 
