@@ -19,7 +19,8 @@
 ### 2. 数据导出
 - 将保存的Bug快照导出为JSON文件
 - 支持批量导出所有Bug记录
-- 文件命名规则：swiftbug-report-{domain}-{date}-{timestamp}.json
+- 文件命名规则：swiftbug-report-{domain}-{date}-{time}.json
+  - 其中 {date} 为年月日（如 20250703），{time} 为时分秒（如 153012），例如：swiftbug-report-example.com-20250703-153012.json
 
 ### 3. 数据导入与还原
 - 支持导入之前导出的Bug快照文件

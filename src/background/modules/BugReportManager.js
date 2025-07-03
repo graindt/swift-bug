@@ -89,9 +89,16 @@ class BugReportManager {
     };
 
     // Create filename
+    // 使用报告的 timestamp 作为导出文件名的时间部分，格式为 yyyymmdd-hhmmss
     const date = new Date(report.timestamp);
     const domain = new URL(report.url).hostname;
-    const filename = `swiftbug-report-${domain}-${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}-${Date.now()}.json`;
+    const dateStr = date.getFullYear() +
+                   String(date.getMonth() + 1).padStart(2, '0') +
+                   String(date.getDate()).padStart(2, '0');
+    const timeStr = String(date.getHours()).padStart(2, '0') +
+                    String(date.getMinutes()).padStart(2, '0') +
+                    String(date.getSeconds()).padStart(2, '0');
+    const filename = `swiftbug-report-${domain}-${dateStr}-${timeStr}.json`;
 
     // Download file using data URI (service worker context)
     const jsonStr = JSON.stringify(exportData, null, 2);
