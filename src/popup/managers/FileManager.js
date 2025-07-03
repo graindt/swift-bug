@@ -26,6 +26,7 @@ export class FileManager {
         throw new Error('Invalid bug report file format');
       }
 
+      report.importedAt = new Date().toISOString();
       // Restore bug data
       const response = await this.bugReportService.restoreReport(report);
 
