@@ -51,7 +51,9 @@ export class UIRenderer {
         <div class="swiftbug-report-title">${escapeHtml(report.title)}</div>
         <div class="swiftbug-report-time">${formattedDate}</div>
       </div>
-      <div class="swiftbug-report-url">${escapeHtml(domain)}</div>
+      <div class="swiftbug-report-url">
+        <a href="${escapeHtml(report.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(report.url)}">${escapeHtml(report.url)}</a>
+      </div>
       ${report.sourceUrl ? `
         <div class="swiftbug-report-source">
           <a href="${escapeHtml(report.sourceUrl)}" target="_blank" title="${escapeHtml(report.sourceTitle || report.sourceUrl)}">
