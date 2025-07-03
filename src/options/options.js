@@ -33,11 +33,6 @@ class BugReporterOptions {
   }
 
   setupEventListeners() {
-    // Save button
-    document.getElementById('saveBtn').addEventListener('click', () => {
-      this.saveSettings();
-    });
-
     // Reset button
     document.getElementById('resetBtn').addEventListener('click', () => {
       this.resetSettings();
@@ -53,7 +48,7 @@ class BugReporterOptions {
       this.clearAllData();
     });
 
-    // Input change listeners
+    // Input change listeners for auto-saving
     const inputs = [
       'includeScreenshot',
       'includeNetworkRequests',
@@ -62,13 +57,14 @@ class BugReporterOptions {
       'maxConsoleLines',
       'maxStoredReports',
       'maxNetworkRequests',
-      'maxRequestBodySize'
+      'maxRequestBodySize',
+      'localhostEndpoint'
     ];
     inputs.forEach(id => {
       const element = document.getElementById(id);
       if (element) {
         element.addEventListener('change', () => {
-          this.markAsModified();
+          this.saveSettings();
         });
       }
     });
@@ -123,13 +119,7 @@ class BugReporterOptions {
   }
 
   async saveSettings() {
-    const saveBtn = document.getElementById('saveBtn');
-    const originalText = saveBtn.textContent;
-
     try {
-      saveBtn.textContent = '保存中...';
-      saveBtn.disabled = true;
-
       // Collect settings from UI
       const newSettings = {
         includeScreenshot: document.getElementById('includeScreenshot').checked,
@@ -164,14 +154,10 @@ class BugReporterOptions {
       await chrome.storage.local.set({ settings: newSettings });
       this.settings = newSettings;
 
-      this.showSuccess('设置保存成功！');
-      this.clearModified();
+      this.showSuccess('设置已自动保存');
 
     } catch (error) {
       this.showError('保存设置失败: ' + error.message);
-    } finally {
-      saveBtn.textContent = originalText;
-      saveBtn.disabled = false;
     }
   }
 
@@ -303,19 +289,7 @@ class BugReporterOptions {
     }
   }
 
-  markAsModified() {
-    const saveBtn = document.getElementById('saveBtn');
-    if (!saveBtn.classList.contains('modified')) {
-      saveBtn.classList.add('modified');
-      saveBtn.textContent = '保存设置 *';
-    }
-  }
-
-  clearModified() {
-    const saveBtn = document.getElementById('saveBtn');
-    saveBtn.classList.remove('modified');
-    saveBtn.textContent = '保存设置';
-  }
+  
 
   showSuccess(message) {
     this.showMessage(message, 'success');
