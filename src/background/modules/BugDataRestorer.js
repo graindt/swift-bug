@@ -242,10 +242,15 @@ class BugDataRestorer {
         if (tabId === newTab.id && changeInfo.status === "complete") {
           chrome.tabs.onUpdated.removeListener(listener);
           // Inject the modified bug data into the new tab
-          setTimeout(
-            () => this.injectBugData(localBugData, newTab.id).then(resolve),
-            1000
-          );
+          setTimeout(() => {
+            this.injectBugData(localBugData, newTab.id).then(() => {
+              // Auto refresh the page after data injection
+              setTimeout(() => {
+                chrome.tabs.reload(newTab.id);
+                resolve();
+              }, 300);
+            });
+          }, 1000);
         }
       };
       chrome.tabs.onUpdated.addListener(listener);
