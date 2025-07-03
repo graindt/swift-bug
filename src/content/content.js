@@ -453,6 +453,11 @@ class BugLinkDetector {
       // Fetch and parse the JSON file
       const bugData = await this.fetchBugReport(linkElement.href);
 
+      // Add current page URL as source URL to the bug data
+      bugData.sourceUrl = window.location.href;
+      bugData.sourceTitle = document.title;
+      bugData.importedAt = new Date().toISOString();
+
       // Import the bug report to extension
       const result = await this.importBugReport(bugData);
 
@@ -616,6 +621,22 @@ class ContentModalManager {
             <div class="bug-info-label">用户代理</div>
             <div class="bug-info-value" title="${this.escapeHtml(report.userAgent || 'N/A')}">${this.truncateText(report.userAgent || 'N/A', 50)}</div>
           </div>
+          ${report.sourceUrl ? `
+            <div class="bug-info-item">
+              <div class="bug-info-label">来源网址</div>
+              <div class="bug-info-value">
+                <a href="${this.escapeHtml(report.sourceUrl)}" target="_blank" title="${this.escapeHtml(report.sourceTitle || report.sourceUrl)}" style="color: #007cba; text-decoration: none;">
+                  ${this.escapeHtml(this.truncateText(report.sourceUrl, 60))}
+                </a>
+              </div>
+            </div>
+          ` : ''}
+          ${report.importedAt ? `
+            <div class="bug-info-item">
+              <div class="bug-info-label">导入时间</div>
+              <div class="bug-info-value">${new Date(report.importedAt).toLocaleString('zh-CN')}</div>
+            </div>
+          ` : ''}
         </div>
       </div>
     `;

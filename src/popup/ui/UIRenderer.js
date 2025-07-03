@@ -51,7 +51,16 @@ export class UIRenderer {
         <div class="swiftbug-report-title">${escapeHtml(report.title)}</div>
         <div class="swiftbug-report-time">${formattedDate}</div>
       </div>
-      <div class="swiftbug-report-url">${escapeHtml(domain)}</div>
+      <div class="swiftbug-report-url">
+        <a href="${escapeHtml(report.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(report.url)}">${escapeHtml(report.url)}</a>
+      </div>
+      ${report.sourceUrl ? `
+        <div class="swiftbug-report-source">
+          <a href="${escapeHtml(report.sourceUrl)}" target="_blank" title="${escapeHtml(report.sourceTitle || report.sourceUrl)}">
+            ${report.sourceTitle}
+          </a>
+        </div>
+      ` : ''}
       <div class="swiftbug-report-actions">
         <button class="btn btn-small btn-view" data-action="view" data-id="${report.id}">查看</button>
         <button class="btn btn-small btn-export" data-action="export" data-id="${report.id}">导出</button>
@@ -145,6 +154,22 @@ export class UIRenderer {
             <div class="bug-info-label">用户代理</div>
             <div class="bug-info-value" title="${escapeHtml(report.userAgent || 'N/A')}">${truncateText(report.userAgent || 'N/A', 50)}</div>
           </div>
+          ${report.sourceUrl ? `
+            <div class="bug-info-item">
+              <div class="bug-info-label">导入来源</div>
+              <div class="bug-info-value">
+                <a href="${escapeHtml(report.sourceUrl)}" target="_blank" title="${escapeHtml(report.sourceTitle || report.sourceUrl)}">
+                  ${escapeHtml(truncateText(report.sourceTitle || report.sourceUrl, 60))}
+                </a>
+              </div>
+            </div>
+          ` : ''}
+          ${report.importedAt ? `
+            <div class="bug-info-item">
+              <div class="bug-info-label">导入时间</div>
+              <div class="bug-info-value">${new Date(report.importedAt).toLocaleString('zh-CN')}</div>
+            </div>
+          ` : ''}
         </div>
       </div>
     `;

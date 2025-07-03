@@ -277,11 +277,41 @@ body {
   color: #666;
   margin-bottom: 8px;
   word-break: break-all;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.swiftbug-report-url a {
+  color: #007cba;
+  text-decoration: none;
+}
+
+.swiftbug-report-url a:hover {
+  text-decoration: underline;
 }
 
 .swiftbug-report-actions {
   display: flex;
   gap: 4px;
+}
+
+.swiftbug-report-source {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.swiftbug-report-source a {
+  color: #007cba;
+  text-decoration: none;
+}
+
+.swiftbug-report-source a:hover {
+  text-decoration: underline;
 }
 
 .btn-small {
