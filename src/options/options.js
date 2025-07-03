@@ -190,7 +190,7 @@ class BugReporterOptions {
         maxNetworkRequests: 50,
         maxRequestBodySize: 10240,
         ignoreStaticResources: true,
-        localhostEndpoint: ''
+        localhostEndpoint: 'http://localhost:8080'
       };
 
       await chrome.storage.local.set({ settings: defaultSettings });

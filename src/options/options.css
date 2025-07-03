@@ -88,7 +88,8 @@ body {
   margin-bottom: 8px;
 }
 
-.setting-item input[type="number"] {
+.setting-item input[type="number"],
+.setting-item input[type="text"] {
   width: 150px;
   padding: 8px 12px;
   border: 1px solid #ddd;
@@ -96,8 +97,12 @@ body {
   font-size: 14px;
   transition: border-color 0.2s ease;
 }
+.setting-item input[type="text"] {
+  width: 230px;
+}
 
-.setting-item input[type="number"]:focus {
+.setting-item input[type="number"]:focus,
+.setting-item input[type="text"]:focus {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
