@@ -1,11 +1,9 @@
-// Import modules
-importScripts(
-  'modules/StorageManager.js',
-  'modules/BugReportManager.js',
-  'modules/DataCollector.js',
-  'modules/BugDataRestorer.js',
-  'modules/MessageHandler.js'
-);
+// Import modules using ES6 syntax
+import StorageManager from './modules/StorageManager.js';
+import BugReportManager from './modules/BugReportManager.js';
+import DataCollector from './modules/DataCollector.js';
+import BugDataRestorer from './modules/BugDataRestorer.js';
+import MessageHandler from './modules/MessageHandler.js';
 
 // Background service worker for Swift Bug
 class BugReporterBackground {

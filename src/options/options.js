@@ -1,6 +1,9 @@
+import StorageManager from '../background/modules/StorageManager.js';
+
 // Options page script for Swift Bug
 class BugReporterOptions {
   constructor() {
+    this.storageManager = new StorageManager();
     this.settings = {};
     this.init();
   }
@@ -14,18 +17,7 @@ class BugReporterOptions {
 
   async loadSettings() {
     try {
-      const result = await chrome.storage.local.get(['settings']);
-      this.settings = result.settings || {
-        maxStoredReports: 50,
-        includeScreenshot: true,
-        includeNetworkRequests: true,
-        captureAllNetworkRequests: false,
-        maxConsoleLines: 100,
-        maxNetworkRequests: 50,
-        maxRequestBodySize: 10240,
-        ignoreStaticResources: true,
-        localhostEndpoint: 'http://localhost:8080'
-      };
+      this.settings = await this.storageManager.getSettings();
     } catch (error) {
       console.error('[SwiftBug]: Error loading settings:', error);
       this.showError('加载设置失败: ' + error.message);
@@ -150,10 +142,8 @@ class BugReporterOptions {
         throw new Error('请求体大小限制必须在1-100KB之间');
       }
 
-      // Save settings
-      await chrome.storage.local.set({ settings: newSettings });
-      this.settings = newSettings;
-
+      // Save settings using StorageManager
+      this.settings = await this.storageManager.updateSettings(newSettings);
       this.showSuccess('设置已自动保存');
 
     } catch (error) {
@@ -167,23 +157,11 @@ class BugReporterOptions {
     }
 
     try {
-      const defaultSettings = {
-        maxStoredReports: 50,
-        includeScreenshot: true,
-        includeNetworkRequests: true,
-        captureAllNetworkRequests: false,
-        maxConsoleLines: 100,
-        maxNetworkRequests: 50,
-        maxRequestBodySize: 10240,
-        ignoreStaticResources: true,
-        localhostEndpoint: 'http://localhost:8080'
-      };
-
-      await chrome.storage.local.set({ settings: defaultSettings });
-      this.settings = defaultSettings;
+      // Use StorageManager's default settings
+      const defaultSettings = this.storageManager.defaultSettings;
+      this.settings = await this.storageManager.updateSettings(defaultSettings);
       this.updateUI();
       this.showSuccess('设置已重置为默认值');
-      this.clearModified();
 
     } catch (error) {
       this.showError('重置设置失败: ' + error.message);
@@ -269,9 +247,9 @@ class BugReporterOptions {
       // Clear all storage
       await chrome.storage.local.clear();
 
-      // Restore current settings only
+      // Restore current settings only using StorageManager
+      await this.storageManager.updateSettings(currentSettings);
       await chrome.storage.local.set({
-        settings: currentSettings,
         bugReports: {},
         bugReportCache: {}
       });
@@ -288,8 +266,6 @@ class BugReporterOptions {
       clearBtn.disabled = false;
     }
   }
-
-  
 
   showSuccess(message) {
     this.showMessage(message, 'success');

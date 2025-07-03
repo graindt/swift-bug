@@ -227,7 +227,10 @@ class BugReportManager {
   }
 }
 
-// Export for use in background script
+// Export for use in background script (CommonJS)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = BugReportManager;
 }
+
+// ES6 module export
+export default BugReportManager;

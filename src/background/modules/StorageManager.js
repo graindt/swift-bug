@@ -59,7 +59,10 @@ class StorageManager {
   }
 }
 
-// Export for use in background script
+// Export for use in background script (CommonJS)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = StorageManager;
 }
+
+// ES6 module export
+export default StorageManager;
