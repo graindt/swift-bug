@@ -100,6 +100,9 @@ class BugReporterPopup {
         case 'restore':
           await this.restoreReport(reportId);
           break;
+        case 'restore-local':
+          await this.restoreReportToLocal(reportId);
+          break;
       }
     } catch (error) {
       showError('操作失败: ' + error.message);
@@ -204,6 +207,22 @@ class BugReporterPopup {
 
     if (result.success) {
       showSuccess('还原成功！页面已自动跳转并恢复数据。');
+    } else {
+      throw new Error(result.error);
+    }
+  }
+
+  async restoreReportToLocal(reportId) {
+    const report = this.bugReportService.getReportById(reportId);
+    if (!report) {
+      showError('报告不存在');
+      return;
+    }
+
+    const result = await this.bugReportService.restoreReportToLocal(report);
+
+    if (result.success) {
+      showSuccess('成功发送到本地服务器！');
     } else {
       throw new Error(result.error);
     }

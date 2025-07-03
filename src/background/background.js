@@ -90,6 +90,11 @@ class BugReporterBackground {
           }
           break;
 
+        case 'restoreBugDataToLocal':
+          await this.restoreBugDataToLocal(message.data);
+          sendResponse({ success: true });
+          break;
+
         default:
           sendResponse({ success: false, error: 'Unknown action' });
       }
@@ -667,6 +672,54 @@ class BugReporterBackground {
     }
   }
 
+  async getSettings() {
+    const result = await chrome.storage.local.get(['settings']);
+    return result.settings || {};
+  }
+
+  async restoreBugDataToLocal(bugData) {
+    const settings = await this.getSettings();
+    const localhostEndpoint = settings.localhostEndpoint;
+
+    if (!localhostEndpoint) {
+      throw new Error('Localhost endpoint is not configured in settings.');
+    }
+
+    const localUrl = new URL(localhostEndpoint);
+    const localHostname = localUrl.hostname;
+
+    // Create a deep copy of the bug data to avoid modifying the original report
+    const localBugData = JSON.parse(JSON.stringify(bugData));
+
+    // Modify cookies for the localhost domain
+    if (localBugData.cookies) {
+      localBugData.cookies.forEach(cookie => {
+        cookie.domain = localHostname;
+        // Remove the 'secure' attribute for http localhost
+        if (localUrl.protocol === 'http:') {
+          delete cookie.secure;
+        }
+      });
+    }
+
+    // Update the URL in the bug data to the localhost endpoint
+    localBugData.url = localhostEndpoint;
+
+    // Open a new tab with the localhost URL
+    const newTab = await chrome.tabs.create({ url: localhostEndpoint, active: true });
+
+    // Wait for the new tab to finish loading before injecting data
+    return new Promise((resolve) => {
+      const listener = (tabId, changeInfo) => {
+        if (tabId === newTab.id && changeInfo.status === 'complete') {
+          chrome.tabs.onUpdated.removeListener(listener);
+          // Inject the modified bug data into the new tab
+          setTimeout(() => this.injectBugData(localBugData, newTab.id).then(resolve), 1000);
+        }
+      };
+      chrome.tabs.onUpdated.addListener(listener);
+    });
+  }
 }
 
 // Initialize background script
